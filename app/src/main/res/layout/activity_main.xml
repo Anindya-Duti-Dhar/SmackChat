@@ -1,0 +1,25 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:orientation="vertical">
+
+    <Button android:id="@+id/button_send_test"
+        android:text="send test message"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+
+    <Button android:id="@+id/button_create_room"
+        android:text="Create Room"
+        android:layout_marginTop="32dp"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+
+    <TextView android:id="@+id/text_view_message"
+        android:text="receive test message"
+        android:layout_width="fill_parent"
+        android:layout_margin="32dp"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>
