@@ -58,15 +58,15 @@ public class Chat extends AppCompatActivity{
         Log.d("Conversation", event.from);
         Log.d("Conversation", event.message);
         // insert array list
-        ChatItem chatListItem = new ChatItem();
-        chatListItem.setChatUserName("serverdata");
-        chatListItem.setChatText("serverdata");
-        chatItem.add(chatListItem);
+        //ChatItem chatListItem = new ChatItem();
+        //chatListItem.setChatUserName("serverdata");
+        //chatListItem.setChatText("serverdata");
+        //chatItem.add(chatListItem);
 
         // set the recycler view to inflate the list
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-        adapter = new ChatAdapter(getApplicationContext(), chatItem);
-        mRecyclerView.setAdapter(adapter);
+        //mRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        //adapter = new ChatAdapter(getApplicationContext(), chatItem);
+        //mRecyclerView.setAdapter(adapter);
     }
 
     @Override

@@ -8,36 +8,32 @@ import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import org.greenrobot.eventbus.EventBus;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.chat.Chat;
 import org.jivesoftware.smack.chat.ChatManager;
-import org.jivesoftware.smack.chat.ChatManagerListener;
-import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.filter.MessageTypeFilter;
-import org.jivesoftware.smack.filter.PacketFilter;
+import org.jivesoftware.smack.filter.StanzaFilter;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.roster.Roster;
+import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
-import org.jivesoftware.smackx.delay.packet.DelayInformation;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.MUCNotJoinedException;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
-import org.jivesoftware.smackx.xdata.Form;
-import org.jivesoftware.smackx.xdata.packet.DataForm;
 
 import java.io.IOException;
-import java.util.Date;
 
 public class MyXMPP {
 
@@ -151,39 +147,24 @@ public class MyXMPP {
             Log.d("xmpp", "user has Joined");
             sendBroadCast("join");
 
-/*            ChatManager.getInstanceFor(connection).addChatListener(new ChatManagerListener() {
+            StanzaFilter filter = MessageTypeFilter.GROUPCHAT;
+            connection.addAsyncStanzaListener(new StanzaListener()
+            {
                 @Override
-                public void chatCreated(Chat chat, boolean createdLocally) {
-                    chat.addMessageListener(new ChatMessageListener() {
-                        @Override
-                        public void processMessage(Chat chat, Message message) {
-                            System.out.println(message.getBody());
-                            String body = message.getBody();
-                            Log.d("xmpp", body);
-                            String from = message.getFrom();
-                            Log.d("xmpp", from);
-                            org.greenrobot.eventbus.EventBus.getDefault().post(new MessageEvent(from, body));
-                        }
-                    });
+                public void processPacket(Stanza packet) throws SmackException.NotConnectedException {
+                    Message message = (Message) packet;
+                    if (message.getBody() != null)
+                    {
+                        String from = message.getFrom();
+                        Log.d("xmpp:: chat from:: ", from);
+                        String Body = message.getBody();
+                        Log.d("xmpp:: chat body:: ", Body);
+                        // Add incoming message to the list view or similar
+                        EventBus.getDefault().post(new MessageEvent(from, Body));
+                    }
                 }
-            });*/
-
-
-
+            }, filter);
         }
-    }
-
-    public void getLastMessage(){
-        DiscussionHistory history = new DiscussionHistory();
-        history.setMaxStanzas(1);
-        Message msg = null;
-        try {
-            msg = multiUserChat.nextMessage(1000);
-        } catch (MUCNotJoinedException e) {
-            e.printStackTrace();
-        }
-        String message = msg.getBody();
-        String from = msg.getFrom();
     }
 
     public void exitFromRoom(){
@@ -328,40 +309,22 @@ public class MyXMPP {
         }
     }
 
-
-    /* public void sendMsg() {
-        if (connection.isConnected()== true) {
-            // Assume we've created an XMPPConnection name "connection"._
-            chatmanager = ChatManager.getInstanceFor(connection);
-            newChat = chatmanager.createChat("ala_monsur@123.200.14.11");
-
-            try {
-                newChat.sendMessage("Howdy!");
-            } catch (SmackException.NotConnectedException e) {
-                e.printStackTrace();
-            }
-
-
-            ChatManager.getInstanceFor(connection).addChatListener(new ChatManagerListener() {
-                @Override
-                public void chatCreated(Chat chat, boolean createdLocally) {
-                    chat.addMessageListener(new ChatMessageListener() {
-                        @Override
-                        public void processMessage(Chat chat, Message message) {
-                            System.out.println(message.getBody());
-                            Log.d("Chat", message.getBody());
-                            EventBus.getDefault().postSticky(new Broadcast(message.getBody()));
-
-
-                        }
-                    });
-                }
-            });
-
+    /*    public void getLastMessage(){
+        DiscussionHistory history = new DiscussionHistory();
+        history.setSeconds(600000);
+        Message msg = null;
+        try {
+            msg = multiUserChat.nextMessage(1000);
+        } catch (MUCNotJoinedException e) {
+            e.printStackTrace();
         }
-    }
+        String message = msg.getBody();
+        Log.d("xmpp:: Message:: ", message);
+        String from = msg.getFrom();
+        Log.d("xmpp:: from:: ", from);
+    }*/
 
-    public void createChatRoom() {
+/*    public void createChatRoom() {
         if (connection.isConnected()== true) {
             MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
             MultiUserChat muc = manager.getMultiUserChat("pushpita@conference.webhawksit");
