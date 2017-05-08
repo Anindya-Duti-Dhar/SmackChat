@@ -45,5 +45,4 @@ dependencies {
 // Optional for XMPP extensions support
     compile 'org.igniterealtime.smack:smack-extensions:4.1.4'
 
-    compile 'com.mcxiaoke.volley:library-aar:1.0.0'
 }
