@@ -22,8 +22,6 @@
 
         <activity android:name=".MainActivity"/>
 
-        <activity android:name=".ChatRoom"/>
-
         <activity android:name=".Chat"/>
 
         <service

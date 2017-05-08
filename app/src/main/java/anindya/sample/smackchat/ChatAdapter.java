@@ -39,7 +39,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
         mContext = context;
 /*        for (int i = 0; i < _data.size(); i++) {
             ChatItem val = _data.get(i);
-            if (val.getChatUserName().equals("")) {
+            if (val.getChatText().equals("initxmpp")) {
                 _data.remove(i);
                 break;
             }

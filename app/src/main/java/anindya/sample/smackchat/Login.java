@@ -18,7 +18,7 @@ public class Login extends AppCompatActivity {
 
     private BroadcastReceiver mBroadcastReceiver;
     private ProgressDialog mProgressDialog;
-    String userName;
+    public static String userName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,7 +36,8 @@ public class Login extends AppCompatActivity {
                 // checking for type intent filter
                 if (intent.getAction().equals("connection")) {
                     mProgressDialog.hide();
-                    Intent intentActivity = new Intent(getBaseContext(),ChatRoom.class );
+                    finish();
+                    Intent intentActivity = new Intent(getBaseContext(),Chat.class );
                     intentActivity.putExtra("user",userName);
                     startActivity(intentActivity);
                     Log.d("xmpp", "successfully connected");

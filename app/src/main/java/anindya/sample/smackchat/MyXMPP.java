@@ -13,7 +13,6 @@ import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.MessageListener;
-import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPConnection;
@@ -23,17 +22,17 @@ import org.jivesoftware.smack.chat.ChatManager;
 import org.jivesoftware.smack.filter.MessageTypeFilter;
 import org.jivesoftware.smack.filter.StanzaFilter;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
-import org.jivesoftware.smackx.muc.DiscussionHistory;
-import org.jivesoftware.smackx.muc.MUCNotJoinedException;
+import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 
 import java.io.IOException;
+import java.util.ArrayList;
+
 
 public class MyXMPP {
 
@@ -42,7 +41,7 @@ public class MyXMPP {
     private static final int PORT = 5222;
     private String userName ="";
     private String passWord = "";
-    AbstractXMPPConnection connection ;
+    AbstractXMPPConnection  connection ;
     ChatManager chatmanager ;
     MessageListener mMessageListener;
     Chat newChat;
@@ -56,11 +55,17 @@ public class MyXMPP {
     MultiUserChatManager manager;
     private Context mContext;
 
-    Handler handler;
+    StanzaListener mStanzaListener;
+    StanzaFilter filter;
 
+    ArrayList<ChatItem> chatItem;
 
     public MyXMPP(Context context) {
         mContext=context;
+    }
+
+    public AbstractXMPPConnection  getXMPPTCPConnectionObject()    {
+        return connection;
     }
 
     //Initialize
@@ -91,6 +96,7 @@ public class MyXMPP {
         }).start();
     }
 
+    // Connection function
     public void connectConnection()
     {
         AsyncTask<Void, Void, Boolean> connectionThread = new AsyncTask<Void, Void, Boolean>() {
@@ -116,6 +122,8 @@ public class MyXMPP {
         connectionThread.execute();
     }
 
+
+    // Login function
     public void login() {
 
         try {
@@ -130,9 +138,10 @@ public class MyXMPP {
 
     }
 
+    // join chat room function
     public  void joinChatRoom(String userName){
         manager = MultiUserChatManager.getInstanceFor(connection);
-        multiUserChat = manager.getMultiUserChat("livestreaming@conference.webhawksit");
+        multiUserChat = manager.getMultiUserChat("livelive@conference.webhawksit");
         try {
             multiUserChat.join(userName);
         } catch (SmackException.NoResponseException e) {
@@ -143,32 +152,45 @@ public class MyXMPP {
             e.printStackTrace();
         }
 
+        // if user joined successfully
         if(multiUserChat.isJoined()) {
             Log.d("xmpp", "user has Joined");
             sendBroadCast("join");
+        }
+        // add listener for receiving messages
+        receiveMessages();
+    }
 
-            StanzaFilter filter = MessageTypeFilter.GROUPCHAT;
-            connection.addAsyncStanzaListener(new StanzaListener()
-            {
+    // received Messages from room
+    public void receiveMessages(){
+        if(connected) {
+            chatItem = new ArrayList<ChatItem>();
+            filter = MessageTypeFilter.GROUPCHAT;
+            mStanzaListener = new StanzaListener() {
                 @Override
                 public void processPacket(Stanza packet) throws SmackException.NotConnectedException {
                     Message message = (Message) packet;
-                    if (message.getBody() != null)
-                    {
+                    if (message.getBody() != null) {
                         String from = message.getFrom();
-                        Log.d("xmpp:: chat from:: ", from);
-                        String Body = message.getBody();
-                        Log.d("xmpp:: chat body:: ", Body);
-                        // Add incoming message to the list view or similar
-                        EventBus.getDefault().post(new MessageEvent(from, Body));
+                        String OnlyUserName = from.replace("livelive@conference.webhawksit/",""); //remove room name
+                        Log.d("xmpp who:: ", from);
+                        String body = message.getBody();
+                        Log.d("xmpp body:: ", body);
+                        EventBus.getDefault().postSticky(new ChatEvent(OnlyUserName, body));
                     }
+                    sendBroadCast("newChat");
                 }
-            }, filter);
+            };
+            connection.addAsyncStanzaListener(mStanzaListener, filter);
         }
     }
 
+    // exit from the room
     public void exitFromRoom(){
         try {
+            //remove listener
+            connection.removeAsyncStanzaListener(mStanzaListener);
+            // leave room
             multiUserChat.leave();
             Log.d("xmpp", "Leave Chat Room!");
         } catch (SmackException.NotConnectedException e) {
@@ -176,6 +198,7 @@ public class MyXMPP {
         }
     }
 
+    // send chat to the room
     public void sendChat(String chat){
         try {
             multiUserChat.sendMessage(chat);
@@ -184,6 +207,7 @@ public class MyXMPP {
         }
     }
 
+    // send broadcast to the other activities
     public void  sendBroadCast(String type){
         String mType = type;
         String intentText = null;
@@ -308,21 +332,6 @@ public class MyXMPP {
                 });
         }
     }
-
-    /*    public void getLastMessage(){
-        DiscussionHistory history = new DiscussionHistory();
-        history.setSeconds(600000);
-        Message msg = null;
-        try {
-            msg = multiUserChat.nextMessage(1000);
-        } catch (MUCNotJoinedException e) {
-            e.printStackTrace();
-        }
-        String message = msg.getBody();
-        Log.d("xmpp:: Message:: ", message);
-        String from = msg.getFrom();
-        Log.d("xmpp:: from:: ", from);
-    }*/
 
 /*    public void createChatRoom() {
         if (connection.isConnected()== true) {

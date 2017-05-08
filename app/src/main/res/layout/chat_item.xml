@@ -36,7 +36,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:layout_weight="2.9"
+            android:layout_weight="3.6"
             android:orientation="vertical">
 
             <TextView
@@ -62,28 +62,6 @@
                 android:textSize="14sp" />
 
         </LinearLayout>
-
-
-        <RelativeLayout
-            android:layout_width="0dp"
-            android:gravity="center"
-            android:layout_gravity="center_vertical"
-            android:layout_height="wrap_content"
-            android:layout_weight=".8">
-
-            <TextView
-                android:id="@+id/chat_chat_time"
-                android:layout_width="match_parent"
-                android:layout_height="16dp"
-                android:layout_gravity="right|top"
-                android:gravity="right"
-                android:text="Fri"
-                android:layout_marginRight="4dp"
-                android:textAllCaps="false"
-                android:textSize="10sp"
-                android:visibility="visible" />
-
-        </RelativeLayout>
 
     </LinearLayout>
 

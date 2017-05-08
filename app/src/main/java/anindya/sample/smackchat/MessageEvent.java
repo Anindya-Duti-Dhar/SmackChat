@@ -1,12 +1,12 @@
 package anindya.sample.smackchat;
 
+import java.util.ArrayList;
+
 public class MessageEvent {
 
-    public final String from;
-    public final String message;
+    ArrayList<ChatItem> chatItem;
 
-    public MessageEvent(String from, String message) {
-        this.message = message;
-        this.from = from;
+    public MessageEvent(ArrayList<ChatItem> chatItem) {
+        this.chatItem = chatItem;
     }
 }
