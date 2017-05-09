@@ -60,10 +60,18 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
         // Get the data model based on position
         final ChatItem data = _data.get(position);
         TextView ChatUsername = viewHolder.chat_username;
-        ChatUsername.setText(data.getChatUserName());
+        try {
+            ChatUsername.setText(data.getChatUserName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         TextView ChatUserChat = viewHolder.chat_user_chat;
-        ChatUserChat.setText(data.getChatText());
+        try {
+            ChatUserChat.setText(data.getChatText());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

@@ -67,9 +67,8 @@ public class Chat extends AppCompatActivity {
     @Subscribe
     public void onMessageEvent(ChatEvent event) {
         String chat = event.message;
-        Log.d("xmpp:: Chat:", chat);
         String from = event.from;
-        Log.d("xmpp:: From:", from);
+        Log.d("xmpp: ", "From: "+from+"\nChat: "+chat);
         addAMessage(from, chat);
     }
 
@@ -146,7 +145,7 @@ public class Chat extends AppCompatActivity {
                 // checking for type intent filter
                 if (intent.getAction().equals("join")) {
                     mProgressDialog.hide();
-                    Log.d("xmpp", "successfully joined");
+                    Log.d("xmpp: ", "successfully joined");
                     mRecyclerView.setLayoutManager(mLinearLayoutManager);
                     mRecyclerView.setAdapter(adapter);
                     mLinearLayoutManager.setStackFromEnd(true);

@@ -27,8 +27,12 @@ import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smack.util.StringUtils;
+import org.jivesoftware.smackx.iqregister.AccountManager;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
+import org.jivesoftware.smackx.muc.RoomInfo;
+import org.jivesoftware.smackx.xdata.Form;
+import org.jivesoftware.smackx.xdata.packet.DataForm;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,6 +42,7 @@ public class MyXMPP {
 
     String  TAG = "MyXMPP";
     private static final String HOST = "123.200.14.11";
+    private static final String SERVICE_NAME = "webhawksit";
     private static final int PORT = 5222;
     private String userName ="";
     private String passWord = "";
@@ -46,6 +51,7 @@ public class MyXMPP {
     MessageListener mMessageListener;
     Chat newChat;
     XMPPConnectionListener connectionListener = new XMPPConnectionListener();
+    XMPPConnectionListener2 connectionListener2 = new XMPPConnectionListener2();
     private boolean connected;
     private boolean isToasted;
     private boolean chat_created;
@@ -57,6 +63,13 @@ public class MyXMPP {
 
     StanzaListener mStanzaListener;
     StanzaFilter filter;
+    String mRoomName;
+    String mServiceName;
+    String mOwnerNick;
+    String mRoomDescription;
+    String mRoomNameGetFromServer;
+    RoomInfo mRoomInfo;
+    String mRoomDescriptionFromServer;
 
     ArrayList<ChatItem> chatItem;
 
@@ -69,20 +82,35 @@ public class MyXMPP {
     }
 
     //Initialize
-    public void init(String userId, String pwd ) {
-        Log.i("XMPP", "Initializing!");
+    public void initForLogin(String userId, String pwd ) {
         this.userName = userId;
         this.passWord = pwd;
         XMPPTCPConnectionConfiguration.Builder configBuilder = XMPPTCPConnectionConfiguration.builder();
         configBuilder.setUsernameAndPassword(userName, passWord);
         configBuilder.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
         configBuilder.setResource("Android");
-        configBuilder.setServiceName(HOST);
+        configBuilder.setServiceName(SERVICE_NAME);
         configBuilder.setHost(HOST);
         configBuilder.setPort(PORT);
         connection = new XMPPTCPConnection(configBuilder.build());
         connection.addConnectionListener(connectionListener);
+        Log.d("xmpp: ", "Initializing!");
+    }
 
+    //Initialize
+    public void initForRegistration(String userId, String pwd ) {
+        this.userName = userId;
+        this.passWord = pwd;
+        XMPPTCPConnectionConfiguration.Builder configBuilder = XMPPTCPConnectionConfiguration.builder();
+        configBuilder.setUsernameAndPassword(userName, passWord);
+        configBuilder.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
+        configBuilder.setResource("Android");
+        configBuilder.setServiceName(SERVICE_NAME);
+        configBuilder.setHost(HOST);
+        configBuilder.setPort(PORT);
+        connection = new XMPPTCPConnection(configBuilder.build());
+        connection.addConnectionListener(connectionListener2);
+        Log.d("xmpp: ", "Initializing!");
     }
 
     // Disconnect Function
@@ -108,7 +136,6 @@ public class MyXMPP {
                 // Create a connection
                 try {
                     connection.connect();
-                    login();
                     connected = true;
 
                 } catch (IOException e) {
@@ -122,26 +149,53 @@ public class MyXMPP {
         connectionThread.execute();
     }
 
+    //accountManager.supportsAccountCreation()
+
+    // registration
+    public void registration(){
+        // create the account:
+        AccountManager accountManager = AccountManager.getInstance(connection);
+        try {
+            accountManager.createAccount(userName, passWord);
+            Log.d("xmpp: ", "Registration Success");
+            login();
+        } catch (SmackException.NoResponseException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Registration Failure No Response "+e.getMessage());
+        } catch (XMPPException.XMPPErrorException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Registration Failure XMPP error "+e.getMessage());
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Registration Failure not connected "+e.getMessage());
+        }
+    }
 
     // Login function
     public void login() {
-
         try {
             connection.login(userName, passWord);
             //Log.i("LOGIN", "Yey! We're connected to the Xmpp server!");
+            Log.d("xmpp: ", "Login Success");
             Presence presence = new Presence(Presence.Type.available);
             connection.sendPacket(presence);
+            sendBroadCast("connection");
         } catch (XMPPException | SmackException | IOException e) {
             e.printStackTrace();
+            Log.d("xmpp: ", "Login Failure "+e.getMessage());
         } catch (Exception e) {
+            Log.d("xmpp: ", "Login Failure "+e.getMessage());
         }
 
     }
 
     // join chat room function
     public  void joinChatRoom(String userName){
+        mRoomName = "hello";
+        mServiceName = connection.getServiceName();
+        Log.d("xmpp: ", "Service Name: "+mServiceName);
         manager = MultiUserChatManager.getInstanceFor(connection);
-        multiUserChat = manager.getMultiUserChat("livelive@conference.webhawksit");
+        multiUserChat = manager.getMultiUserChat(mRoomName+"@conference.webhawksit");
         try {
             multiUserChat.join(userName);
         } catch (SmackException.NoResponseException e) {
@@ -154,8 +208,26 @@ public class MyXMPP {
 
         // if user joined successfully
         if(multiUserChat.isJoined()) {
-            Log.d("xmpp", "user has Joined");
+            Log.d("xmpp: ", "user has Joined in the chat room");
             sendBroadCast("join");
+            try {
+                //room info
+                mRoomInfo = manager.getRoomInfo(mRoomName+"@conference.webhawksit");
+                mOwnerNick =  multiUserChat.getOwners().get(0).getNick();
+                mRoomNameGetFromServer = mRoomInfo.getName();
+                mRoomDescriptionFromServer = mRoomInfo.getDescription();
+                Log.d("xmpp: ", "Room Name: "+mRoomNameGetFromServer+" Room Description: "+mRoomDescriptionFromServer+" Room Owner Nick: "+mOwnerNick);
+                // room list
+                for (int i = 0; i<manager.getHostedRooms("conference.webhawksit").size(); i++){
+                    Log.d("xmpp: ", "Room List Id: "+i+"\nRoom Name: "+manager.getHostedRooms("conference.webhawksit").get(i).getName()+"\nRoom JID: "+manager.getHostedRooms("conference.webhawksit").get(i).getJid());
+                }
+            } catch (SmackException.NoResponseException e) {
+                e.printStackTrace();
+            } catch (XMPPException.XMPPErrorException e) {
+                e.printStackTrace();
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+            }
         }
         // add listener for receiving messages
         receiveMessages();
@@ -172,10 +244,10 @@ public class MyXMPP {
                     Message message = (Message) packet;
                     if (message.getBody() != null) {
                         String from = message.getFrom();
-                        String OnlyUserName = from.replace("livelive@conference.webhawksit/",""); //remove room name
-                        Log.d("xmpp who:: ", from);
+                        String OnlyUserName = from.replace(mRoomName+"@conference.webhawksit/",""); //remove room name
+                        Log.d("xmpp: ", "Original sender: "+from);
                         String body = message.getBody();
-                        Log.d("xmpp body:: ", body);
+                        Log.d("xmpp: ", "From: "+OnlyUserName+"\nMessage: "+body);
                         EventBus.getDefault().postSticky(new ChatEvent(OnlyUserName, body));
                     }
                     sendBroadCast("newChat");
@@ -192,7 +264,7 @@ public class MyXMPP {
             connection.removeAsyncStanzaListener(mStanzaListener);
             // leave room
             multiUserChat.leave();
-            Log.d("xmpp", "Leave Chat Room!");
+            Log.d("xmpp: ", "Leave Chat Room!");
         } catch (SmackException.NotConnectedException e) {
             e.printStackTrace();
         }
@@ -227,13 +299,11 @@ public class MyXMPP {
         @Override
         public void connected(final XMPPConnection connection) {
 
-            Log.d("xmpp", "Connected!");
+            Log.d("xmpp: ", "Connected!");
             connected = true;
             if (!connection.isAuthenticated()) {
                 login();
             }
-
-           sendBroadCast("connection");
         }
 
         @Override
@@ -247,7 +317,7 @@ public class MyXMPP {
                         // TODO Auto-generated method stub
                     }
                 });
-            Log.d("xmpp", "ConnectionCLosed!");
+            Log.d("xmpp: ", "ConnectionCLosed!");
             connected = false;
             chat_created = false;
             loggedin = false;
@@ -262,7 +332,7 @@ public class MyXMPP {
 
                     }
                 });
-            Log.d("xmpp", "ConnectionClosedOn Error!");
+            Log.d("xmpp: ", "ConnectionClosedOn Error!");
             connected = false;
             chat_created = false;
             loggedin = false;
@@ -270,7 +340,7 @@ public class MyXMPP {
 
         @Override
         public void reconnectingIn(int arg0) {
-            Log.d("xmpp", "Reconnectingin " + arg0);
+            Log.d("xmpp: ", "Reconnectingin " + arg0);
             loggedin = false;
         }
 
@@ -283,7 +353,7 @@ public class MyXMPP {
 
                     }
                 });
-            Log.d("xmpp", "ReconnectionFailed!");
+            Log.d("xmpp: ", "ReconnectionFailed!");
             connected = false;
             chat_created = false;
             loggedin = false;
@@ -299,7 +369,7 @@ public class MyXMPP {
 
                     }
                 });
-            Log.d("xmpp", "ReconnectionSuccessful");
+            Log.d("xmpp: ", "ReconnectionSuccessful");
             connected = true;
             chat_created = false;
             loggedin = false;
@@ -307,7 +377,7 @@ public class MyXMPP {
 
         @Override
         public void authenticated(XMPPConnection arg0, boolean arg1) {
-            Log.d("xmpp", "Authenticated!");
+            Log.d("xmpp: ", "Authenticated!");
             loggedin = true;
             chat_created = false;
             new Thread(new Runnable() {
@@ -333,6 +403,116 @@ public class MyXMPP {
         }
     }
 
+    //Connection Listener to check connection state
+    public class XMPPConnectionListener2 implements ConnectionListener {
+        @Override
+        public void connected(final XMPPConnection connection) {
+
+            Log.d("xmpp: ", "Connected!");
+            connected = true;
+            if (!connection.isAuthenticated()) {
+                registration();
+            }
+        }
+
+        @Override
+        public void connectionClosed() {
+            if (isToasted)
+
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        // TODO Auto-generated method stub
+                    }
+                });
+            Log.d("xmpp: ", "ConnectionCLosed!");
+            connected = false;
+            chat_created = false;
+            loggedin = false;
+        }
+
+        @Override
+        public void connectionClosedOnError(Exception arg0) {
+            if (isToasted)
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+
+                    }
+                });
+            Log.d("xmpp: ", "ConnectionClosedOn Error!");
+            connected = false;
+            chat_created = false;
+            loggedin = false;
+        }
+
+        @Override
+        public void reconnectingIn(int arg0) {
+            Log.d("xmpp: ", "Reconnectingin " + arg0);
+            loggedin = false;
+        }
+
+        @Override
+        public void reconnectionFailed(Exception arg0) {
+            if (isToasted)
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+
+                    }
+                });
+            Log.d("xmpp: ", "ReconnectionFailed!");
+            connected = false;
+            chat_created = false;
+            loggedin = false;
+        }
+
+        @Override
+        public void reconnectionSuccessful() {
+            if (isToasted)
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        // TODO Auto-generated method stub
+
+                    }
+                });
+            Log.d("xmpp: ", "ReconnectionSuccessful");
+            connected = true;
+            chat_created = false;
+            loggedin = false;
+        }
+
+        @Override
+        public void authenticated(XMPPConnection arg0, boolean arg1) {
+            Log.d("xmpp: ", "Authenticated!");
+            loggedin = true;
+            chat_created = false;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+
+                }
+            }).start();
+            if (isToasted)
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        // TODO Auto-generated method stub
+
+                    }
+                });
+        }
+    }
+
+    // create chat room
 /*    public void createChatRoom() {
         if (connection.isConnected()== true) {
             MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
@@ -349,6 +529,70 @@ public class MyXMPP {
             // an instant room
             try {
                 muc.sendConfigurationForm(new Form(DataForm.Type.submit));
+            } catch (SmackException.NoResponseException e) {
+                e.printStackTrace();
+            } catch (XMPPException.XMPPErrorException e) {
+                e.printStackTrace();
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+            }
+        }
+    }*/
+
+    // destroy chat room
+/*    public void destroyChatRoom(){
+            // destroy room
+        try {
+            multiUserChat.destroy("live Streaming stopped", "demo@conference.webhawksit");
+            Log.d("xmpp: ", "Destroy Chat Chat Room!");
+        } catch (SmackException.NoResponseException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Destroy Room Error: "+e.getMessage());
+        } catch (XMPPException.XMPPErrorException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Destroy Room Error: "+e.getMessage());
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Destroy Room Error: "+e.getMessage());
+        }
+    }*/
+
+    // create persistent room
+   /* public void createPersistentRoom(String userName){
+        if (connection.isConnected()== true) {
+            mRoomName = "hello2";
+            mRoomDescription = "Live Streaming";
+            mServiceName = connection.getServiceName();
+            Log.d("xmpp: ", "Service Name: "+mServiceName);
+            manager = MultiUserChatManager.getInstanceFor(connection);
+            multiUserChat = manager.getMultiUserChat(mRoomName+"@conference.webhawksit");
+            // Create the room
+            try {
+                multiUserChat.create(userName);
+            } catch (XMPPException.XMPPErrorException e) {
+                e.printStackTrace();
+            } catch (SmackException e) {
+                e.printStackTrace();
+            }
+
+            // send configuration for persistent room
+            Form form = null;
+            try {
+                form = multiUserChat.getConfigurationForm();
+            } catch (SmackException.NoResponseException e) {
+                e.printStackTrace();
+            } catch (XMPPException.XMPPErrorException e) {
+                e.printStackTrace();
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+            }
+            Form answerForm = form.createAnswerForm();
+            answerForm.setAnswer("muc#roomconfig_publicroom", true);
+            answerForm.setAnswer("muc#roomconfig_persistentroom", true);
+            answerForm.setAnswer("muc#roomconfig_roomdesc", mRoomDescription);
+            try {
+                multiUserChat.sendConfigurationForm(answerForm);
+                // Send room configuration form which indicates that we want
             } catch (SmackException.NoResponseException e) {
                 e.printStackTrace();
             } catch (XMPPException.XMPPErrorException e) {

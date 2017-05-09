@@ -20,6 +20,7 @@ public class ConnectXmpp extends Service {
         super.onCreate();
 
     }
+
     @Override
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
@@ -27,31 +28,31 @@ public class ConnectXmpp extends Service {
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId)
-    {
-            if(intent != null){
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null) {
             try {
                 userName = intent.getStringExtra("user");
                 passWord = intent.getStringExtra("pwd");
                 mChat = intent.getStringExtra("chat");
-            }catch (Exception e){}
-                String code=intent.getStringExtra("code");
-            if(code.equals("0")){
-                xmpp.init(userName, passWord);
-            xmpp.connectConnection();
+            } catch (Exception e) {
             }
-            else if (code.equals("1")){
+            String code = intent.getStringExtra("code");
+            if (code.equals("0")) {
+                xmpp.initForLogin(userName, passWord);
+                xmpp.connectConnection();
+            } else if (code.equals("1")) {
                 xmpp.joinChatRoom(userName);
-            }
-            else if (code.equals("2")){
+            } else if (code.equals("2")) {
                 xmpp.sendChat(mChat);
-            }
-            else if (code.equals("3")){
+            } else if (code.equals("3")) {
                 xmpp.exitFromRoom();
+            } else if (code.equals("4")) {
+                xmpp.initForRegistration(userName, passWord);
+                xmpp.connectConnection();
             }
         }
 
-    return START_NOT_STICKY;
+        return START_NOT_STICKY;
     }
 
     @Override

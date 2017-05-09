@@ -67,6 +67,30 @@ public class Login extends AppCompatActivity {
                 }
             }
         });
+
+
+        Button button1 = (Button)findViewById(R.id.btnRegister);
+        button1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mProgressDialog.show();
+                try {
+                    EditText userId = (EditText) findViewById(R.id.txtUser);
+                    EditText userPwd = (EditText) findViewById(R.id.txtPwd);
+                    userName = userId.getText().toString();
+                    String passWord = userPwd.getText().toString();
+                    Intent intent = new Intent(getBaseContext(),ConnectXmpp.class );
+                    intent.putExtra("user",userName);
+                    intent.putExtra("pwd",passWord);
+                    intent.putExtra("code","4");
+                    startService(intent);
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     @Override
