@@ -28,6 +28,8 @@ import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.iqregister.AccountManager;
+import org.jivesoftware.smackx.muc.DiscussionHistory;
+import org.jivesoftware.smackx.muc.MUCNotJoinedException;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.muc.RoomInfo;
@@ -69,6 +71,7 @@ public class MyXMPP {
     String mRoomDescription;
     String mRoomNameGetFromServer;
     RoomInfo mRoomInfo;
+    Message msg;
     String mRoomDescriptionFromServer;
 
     ArrayList<ChatItem> chatItem;
@@ -191,7 +194,7 @@ public class MyXMPP {
 
     // join chat room function
     public  void joinChatRoom(String userName){
-        mRoomName = "hello";
+        mRoomName = "livelive";
         mServiceName = connection.getServiceName();
         Log.d("xmpp: ", "Service Name: "+mServiceName);
         manager = MultiUserChatManager.getInstanceFor(connection);
@@ -221,6 +224,18 @@ public class MyXMPP {
                 for (int i = 0; i<manager.getHostedRooms("conference.webhawksit").size(); i++){
                     Log.d("xmpp: ", "Room List Id: "+i+"\nRoom Name: "+manager.getHostedRooms("conference.webhawksit").get(i).getName()+"\nRoom JID: "+manager.getHostedRooms("conference.webhawksit").get(i).getJid());
                 }
+                // room chat history
+                DiscussionHistory history = new DiscussionHistory();
+                history.setMaxStanzas(10);
+                try {
+                    msg = multiUserChat.nextMessage(1000);
+                    Log.d("xmpp: ","Chat History From: "+msg.getFrom()+"\nChat History Text: "+msg.getBody());
+                } catch (MUCNotJoinedException e) {
+                    e.printStackTrace();
+                }
+                /*for (int j = 0; j<history.getMaxStanzas(); j++){
+                        Log.d("xmpp: ","Chat History From: "+msg.getFrom()+"\nChat History Text: "+msg.getBody());
+                }*/
             } catch (SmackException.NoResponseException e) {
                 e.printStackTrace();
             } catch (XMPPException.XMPPErrorException e) {
