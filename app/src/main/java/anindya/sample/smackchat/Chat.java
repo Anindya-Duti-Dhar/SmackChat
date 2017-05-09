@@ -77,7 +77,13 @@ public class Chat extends AppCompatActivity {
         chatListObject.setChatText(message);
         chatListObject.setChatUserName(user);
         chatItem.add(chatListObject);
-        mLinearLayoutManager.setStackFromEnd(true);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    adapter.notifyDataSetChanged();
+                }
+            });
+        //mLinearLayoutManager.setStackFromEnd(true);
     }
 
     @Override

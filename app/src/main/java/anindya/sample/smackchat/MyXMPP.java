@@ -212,6 +212,8 @@ public class MyXMPP {
         // if user joined successfully
         if(multiUserChat.isJoined()) {
             Log.d("xmpp: ", "user has Joined in the chat room");
+            // add listener for receiving messages
+            receiveMessages();
             sendBroadCast("join");
             try {
                 //room info
@@ -225,14 +227,14 @@ public class MyXMPP {
                     Log.d("xmpp: ", "Room List Id: "+i+"\nRoom Name: "+manager.getHostedRooms("conference.webhawksit").get(i).getName()+"\nRoom JID: "+manager.getHostedRooms("conference.webhawksit").get(i).getJid());
                 }
                 // room chat history
-                DiscussionHistory history = new DiscussionHistory();
-                history.setMaxStanzas(10);
-                try {
-                    msg = multiUserChat.nextMessage(1000);
-                    Log.d("xmpp: ","Chat History From: "+msg.getFrom()+"\nChat History Text: "+msg.getBody());
-                } catch (MUCNotJoinedException e) {
-                    e.printStackTrace();
-                }
+                //DiscussionHistory history = new DiscussionHistory();
+                //history.setMaxStanzas(10);
+                //try {
+                //    msg = multiUserChat.nextMessage(1000);
+                //    Log.d("xmpp: ","Chat History From: "+msg.getFrom()+"\nChat History Text: "+msg.getBody());
+               // } catch (MUCNotJoinedException e) {
+               //     e.printStackTrace();
+               // }
                 /*for (int j = 0; j<history.getMaxStanzas(); j++){
                         Log.d("xmpp: ","Chat History From: "+msg.getFrom()+"\nChat History Text: "+msg.getBody());
                 }*/
@@ -244,8 +246,6 @@ public class MyXMPP {
                 e.printStackTrace();
             }
         }
-        // add listener for receiving messages
-        receiveMessages();
     }
 
     // received Messages from room
