@@ -158,9 +158,6 @@ public class Chat extends AppCompatActivity {
                     mRecyclerView.setAdapter(adapter);
                     mLinearLayoutManager.setStackFromEnd(true);
                 }
-                if (intent.getAction().equals("newChat")) {
-                    mLinearLayoutManager.setStackFromEnd(true);
-                }
             }
         };
 

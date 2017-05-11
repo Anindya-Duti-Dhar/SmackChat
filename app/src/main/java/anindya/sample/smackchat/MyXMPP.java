@@ -156,7 +156,7 @@ public class MyXMPP {
         try {
             accountManager.createAccount(userName, passWord);
             Log.d("xmpp: ", "Registration Success");
-            // call login method
+            // call chat_login method
             login();
         } catch (SmackException.NoResponseException e) {
             e.printStackTrace();

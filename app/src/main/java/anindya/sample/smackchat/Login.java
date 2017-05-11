@@ -23,7 +23,7 @@ public class Login extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.login);
+        setContentView(R.layout.chat_login);
 
         mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setMessage("Signing........");
