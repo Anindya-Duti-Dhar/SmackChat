@@ -190,7 +190,7 @@ public class MyXMPP {
 
     // join chat room function
     public  void joinChatRoom(String userName){
-        mRoomName = "livelive";
+        mRoomName = "newroom";
         mServiceName = connection.getServiceName();
         Log.d("xmpp: ", "Service Name: "+mServiceName);
         manager = MultiUserChatManager.getInstanceFor(connection);
