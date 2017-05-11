@@ -17,12 +17,13 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
-        public TextView chat_username, chat_user_chat;
+        public TextView chat_user_without_image, chat_username, chat_user_chat;
 
         public ViewHolder(View itemView) {
             super(itemView);
             chat_username = (TextView) itemView.findViewById(R.id.chat_username);
             chat_user_chat = (TextView) itemView.findViewById(R.id.chat_user_chat);
+            chat_user_without_image = (TextView) itemView.findViewById(R.id.chat_user_without_image);
         }
     }
 
@@ -59,6 +60,14 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
     public void onBindViewHolder(ViewHolder viewHolder, int position) {
         // Get the data model based on position
         final ChatItem data = _data.get(position);
+
+        TextView ChatUserNOImage = viewHolder.chat_user_without_image;
+        try {
+            ChatUserNOImage.setText(String.valueOf(data.getChatUserName().toString().charAt(0)));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         TextView ChatUsername = viewHolder.chat_username;
         try {
             ChatUsername.setText(data.getChatUserName());

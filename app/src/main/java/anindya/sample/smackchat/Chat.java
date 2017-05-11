@@ -68,8 +68,11 @@ public class Chat extends AppCompatActivity {
     public void onMessageEvent(ChatEvent event) {
         String chat = event.message;
         String from = event.from;
-        Log.d("xmpp: ", "From: "+from+"\nChat: "+chat);
-        addAMessage(from, chat);
+        String subject = event.subject;
+        Log.d("xmpp: ", "From: "+from+"\nSubject: "+subject+"\nChat: "+chat);
+        if (subject.equals("comment")){
+            addAMessage(from, chat);
+        }
     }
 
     private void addAMessage(String user, String message) {
@@ -83,7 +86,6 @@ public class Chat extends AppCompatActivity {
                     adapter.notifyDataSetChanged();
                 }
             });
-        //mLinearLayoutManager.setStackFromEnd(true);
     }
 
     @Override
@@ -170,16 +172,18 @@ public class Chat extends AppCompatActivity {
             public void onClick(View v) {
                 if (!chat_edit_text.getText().equals("")) {
                     mChat = chat_edit_text.getText().toString();
-                    sendMessage(mChat);
+                    String mSubject = "comment";
+                    sendMessage(mChat, mSubject);
                     chat_edit_text.setText("");
                 }
             }
         });
     }
 
-    public void sendMessage(String chat) {
+    public void sendMessage(String chat, String subject) {
         Intent intent = new Intent(getBaseContext(), ConnectXmpp.class);
         intent.putExtra("chat", chat);
+        intent.putExtra("subject", subject);
         intent.putExtra("code", "2");
         startService(intent);
     }

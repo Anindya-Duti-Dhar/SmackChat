@@ -10,6 +10,7 @@ public class ConnectXmpp extends Service {
     private String userName;
     private String passWord;
     private String mChat;
+    private String mSubject;
     private MyXMPP xmpp = new MyXMPP(this);
 
     public ConnectXmpp() {
@@ -34,6 +35,7 @@ public class ConnectXmpp extends Service {
                 userName = intent.getStringExtra("user");
                 passWord = intent.getStringExtra("pwd");
                 mChat = intent.getStringExtra("chat");
+                mSubject = intent.getStringExtra("subject");
             } catch (Exception e) {
             }
             String code = intent.getStringExtra("code");
@@ -43,7 +45,7 @@ public class ConnectXmpp extends Service {
             } else if (code.equals("1")) {
                 xmpp.joinChatRoom(userName);
             } else if (code.equals("2")) {
-                xmpp.sendChat(mChat);
+                xmpp.sendChat(mChat, mSubject);
             } else if (code.equals("3")) {
                 xmpp.exitFromRoom();
             } else if (code.equals("4")) {

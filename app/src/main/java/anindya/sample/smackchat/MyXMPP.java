@@ -26,15 +26,10 @@ import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
-import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.iqregister.AccountManager;
-import org.jivesoftware.smackx.muc.DiscussionHistory;
-import org.jivesoftware.smackx.muc.MUCNotJoinedException;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.muc.RoomInfo;
-import org.jivesoftware.smackx.xdata.Form;
-import org.jivesoftware.smackx.xdata.packet.DataForm;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -140,19 +135,19 @@ public class MyXMPP {
                 try {
                     connection.connect();
                     connected = true;
-
+                    Log.d("xmpp: ", "Connection Success");
                 } catch (IOException e) {
+                    Log.d("xmpp: ", "Connection Error: "+e.getMessage());
                 } catch (SmackException e) {
-
+                    Log.d("xmpp: ", "Connection Error: "+e.getMessage());
                 } catch (XMPPException e) {
+                    Log.d("xmpp: ", "Connection Error: "+e.getMessage());
                                     }
                 return null;
             }
         };
         connectionThread.execute();
     }
-
-    //accountManager.supportsAccountCreation()
 
     // registration
     public void registration(){
@@ -161,16 +156,17 @@ public class MyXMPP {
         try {
             accountManager.createAccount(userName, passWord);
             Log.d("xmpp: ", "Registration Success");
+            // call login method
             login();
         } catch (SmackException.NoResponseException e) {
             e.printStackTrace();
-            Log.d("xmpp: ", "Registration Failure No Response "+e.getMessage());
+            Log.d("xmpp: ", "Registration Failure No Response: "+e.getMessage());
         } catch (XMPPException.XMPPErrorException e) {
             e.printStackTrace();
-            Log.d("xmpp: ", "Registration Failure XMPP error "+e.getMessage());
+            Log.d("xmpp: ", "Registration Failure XMPP error: "+e.getMessage());
         } catch (SmackException.NotConnectedException e) {
             e.printStackTrace();
-            Log.d("xmpp: ", "Registration Failure not connected "+e.getMessage());
+            Log.d("xmpp: ", "Registration Failure not connected: "+e.getMessage());
         }
     }
 
@@ -185,9 +181,9 @@ public class MyXMPP {
             sendBroadCast("connection");
         } catch (XMPPException | SmackException | IOException e) {
             e.printStackTrace();
-            Log.d("xmpp: ", "Login Failure "+e.getMessage());
+            Log.d("xmpp: ", "Login Failure: "+e.getMessage());
         } catch (Exception e) {
-            Log.d("xmpp: ", "Login Failure "+e.getMessage());
+            Log.d("xmpp: ", "Login Failure: "+e.getMessage());
         }
 
     }
@@ -203,10 +199,13 @@ public class MyXMPP {
             multiUserChat.join(userName);
         } catch (SmackException.NoResponseException e) {
             e.printStackTrace();
+            Log.d("xmpp: ", "Chat room join Error: "+e.getMessage());
         } catch (XMPPException.XMPPErrorException e) {
             e.printStackTrace();
+            Log.d("xmpp: ", "Chat room join Error: "+e.getMessage());
         } catch (SmackException.NotConnectedException e) {
             e.printStackTrace();
+            Log.d("xmpp: ", "Chat room join Error: "+e.getMessage());
         }
 
         // if user joined successfully
@@ -221,23 +220,13 @@ public class MyXMPP {
                 mOwnerNick =  multiUserChat.getOwners().get(0).getNick();
                 mRoomNameGetFromServer = mRoomInfo.getName();
                 mRoomDescriptionFromServer = mRoomInfo.getDescription();
+
                 Log.d("xmpp: ", "Room Name: "+mRoomNameGetFromServer+" Room Description: "+mRoomDescriptionFromServer+" Room Owner Nick: "+mOwnerNick);
                 // room list
-                for (int i = 0; i<manager.getHostedRooms("conference.webhawksit").size(); i++){
+                /*for (int i = 0; i<manager.getHostedRooms("conference.webhawksit").size(); i++){
                     Log.d("xmpp: ", "Room List Id: "+i+"\nRoom Name: "+manager.getHostedRooms("conference.webhawksit").get(i).getName()+"\nRoom JID: "+manager.getHostedRooms("conference.webhawksit").get(i).getJid());
-                }
-                // room chat history
-                //DiscussionHistory history = new DiscussionHistory();
-                //history.setMaxStanzas(10);
-                //try {
-                //    msg = multiUserChat.nextMessage(1000);
-                //    Log.d("xmpp: ","Chat History From: "+msg.getFrom()+"\nChat History Text: "+msg.getBody());
-               // } catch (MUCNotJoinedException e) {
-               //     e.printStackTrace();
-               // }
-                /*for (int j = 0; j<history.getMaxStanzas(); j++){
-                        Log.d("xmpp: ","Chat History From: "+msg.getFrom()+"\nChat History Text: "+msg.getBody());
                 }*/
+
             } catch (SmackException.NoResponseException e) {
                 e.printStackTrace();
             } catch (XMPPException.XMPPErrorException e) {
@@ -262,8 +251,9 @@ public class MyXMPP {
                         String OnlyUserName = from.replace(mRoomName+"@conference.webhawksit/",""); //remove room name
                         Log.d("xmpp: ", "Original sender: "+from);
                         String body = message.getBody();
-                        Log.d("xmpp: ", "From: "+OnlyUserName+"\nMessage: "+body);
-                        EventBus.getDefault().postSticky(new ChatEvent(OnlyUserName, body));
+                        String subject = message.getSubject();
+                        Log.d("xmpp: ", "From: "+OnlyUserName+"\nSubject: "+subject+"\nMessage: "+body);
+                        EventBus.getDefault().postSticky(new ChatEvent(OnlyUserName, body, subject));
                     }
                     sendBroadCast("newChat");
                 }
@@ -282,15 +272,20 @@ public class MyXMPP {
             Log.d("xmpp: ", "Leave Chat Room!");
         } catch (SmackException.NotConnectedException e) {
             e.printStackTrace();
+            Log.d("xmpp: ", "Leave Chat Room Error: "+e.getMessage());
         }
     }
 
     // send chat to the room
-    public void sendChat(String chat){
+    public void sendChat(String chat, String subject){
         try {
-            multiUserChat.sendMessage(chat);
+            Message newMessage = new Message();
+            newMessage.setBody(chat);
+            newMessage.setSubject(subject);
+            multiUserChat.sendMessage(newMessage);
         } catch (SmackException.NotConnectedException e) {
             e.printStackTrace();
+            Log.d("xmpp: ", "Message send Error: "+e.getMessage());
         }
     }
 
@@ -537,8 +532,10 @@ public class MyXMPP {
                 muc.create(userName);
             } catch (XMPPException.XMPPErrorException e) {
                 e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Create Error: "+e.getMessage());
             } catch (SmackException e) {
                 e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Create Error: "+e.getMessage());
             }
             // Send an empty room configuration form which indicates that we want
             // an instant room
@@ -546,10 +543,13 @@ public class MyXMPP {
                 muc.sendConfigurationForm(new Form(DataForm.Type.submit));
             } catch (SmackException.NoResponseException e) {
                 e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Configuration Error: "+e.getMessage());
             } catch (XMPPException.XMPPErrorException e) {
                 e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Configuration Error: "+e.getMessage());
             } catch (SmackException.NotConnectedException e) {
                 e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Configuration Error: "+e.getMessage());
             }
         }
     }*/
@@ -586,8 +586,10 @@ public class MyXMPP {
                 multiUserChat.create(userName);
             } catch (XMPPException.XMPPErrorException e) {
                 e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Create Error: "+e.getMessage());
             } catch (SmackException e) {
                 e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Create Error: "+e.getMessage());
             }
 
             // send configuration for persistent room
@@ -596,10 +598,13 @@ public class MyXMPP {
                 form = multiUserChat.getConfigurationForm();
             } catch (SmackException.NoResponseException e) {
                 e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Configuration Error: "+e.getMessage());
             } catch (XMPPException.XMPPErrorException e) {
                 e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Configuration Error: "+e.getMessage());
             } catch (SmackException.NotConnectedException e) {
                 e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Configuration Error: "+e.getMessage());
             }
             Form answerForm = form.createAnswerForm();
             answerForm.setAnswer("muc#roomconfig_publicroom", true);
@@ -610,10 +615,13 @@ public class MyXMPP {
                 // Send room configuration form which indicates that we want
             } catch (SmackException.NoResponseException e) {
                 e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Configuration Error: "+e.getMessage());
             } catch (XMPPException.XMPPErrorException e) {
                 e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Configuration Error: "+e.getMessage());
             } catch (SmackException.NotConnectedException e) {
                 e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Configuration Error: "+e.getMessage());
             }
         }
     }*/
