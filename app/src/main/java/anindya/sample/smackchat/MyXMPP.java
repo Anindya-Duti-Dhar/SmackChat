@@ -36,6 +36,7 @@ import org.jivesoftware.smackx.muc.RoomInfo;
 import org.jivesoftware.smackx.search.ReportedData;
 import org.jivesoftware.smackx.search.UserSearch;
 import org.jivesoftware.smackx.search.UserSearchManager;
+import org.jivesoftware.smackx.vcardtemp.packet.VCard;
 import org.jivesoftware.smackx.xdata.Form;
 
 import java.io.IOException;
@@ -187,6 +188,11 @@ public class MyXMPP {
             Log.d("xmpp: ", "Login Success");
             Presence presence = new Presence(Presence.Type.available);
             connection.sendPacket(presence);
+
+            // set extra information
+            //setMyExtraInfo();
+
+            // send success broadcast
             sendBroadCast("connection");
 
             // Roster entry
@@ -262,11 +268,54 @@ public class MyXMPP {
 
             // get Roster
             getBuddies();
+            //get user info
+            getUserInfo();
         }
     }
 
-    public void getBuddies(){
+    // set current user additional information
+    public void setMyExtraInfo(){
+        VCard vcard = new VCard();
+        vcard.setFirstName("User");
+        vcard.setLastName("Testing");
+        vcard.setEmailHome("user@gmail.com");
+        vcard.setMiddleName("For");
+        vcard.setNickName("User");
+        vcard.setPhoneHome("Voice", "127838494");
+        vcard.setOrganization("IT Industry");
+        //vcard.setAvatar("" + image_path); //Image Path should be URL or Can be Byte Array etc.
         try {
+            vcard.save(connection);
+            // send success broadcast
+            sendBroadCast("connection");
+        } catch (SmackException.NoResponseException e) {
+            e.printStackTrace();
+        } catch (XMPPException.XMPPErrorException e) {
+            e.printStackTrace();
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //get specific info
+    public void getUserInfo(){
+        VCard card = new VCard();
+        try {
+            card.load(connection, "user"+"@"+"webhawksit");
+        } catch (SmackException.NoResponseException e) {
+            e.printStackTrace();
+        } catch (XMPPException.XMPPErrorException e) {
+            e.printStackTrace();
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+        }
+        Log.d("xmpp: ", "Friend's Nick Name: "+card.getNickName()+"\nFriend's Email: "+card.getEmailHome());
+    }
+
+
+    // get user list
+    public void getBuddies(){
+        try  {
             UserSearchManager manager = new UserSearchManager(connection);
             String searchFormString = "search." + connection.getServiceName();
             Log.d("***", "SearchForm: " + searchFormString);
