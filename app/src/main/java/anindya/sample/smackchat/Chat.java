@@ -84,6 +84,7 @@ public class Chat extends AppCompatActivity {
                 @Override
                 public void run() {
                     adapter.notifyDataSetChanged();
+                    mRecyclerView.scrollToPosition(chatItem.size() - 1);
                 }
             });
     }
