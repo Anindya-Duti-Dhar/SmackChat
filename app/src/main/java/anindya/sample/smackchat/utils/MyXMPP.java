@@ -268,7 +268,7 @@ public class MyXMPP {
             configRoom();
 
             // get Roster
-            //getBuddies();
+            getBuddies();
             //get user info
             //getUserInfo();
 
@@ -336,7 +336,7 @@ public class MyXMPP {
             if (results != null) {
                 List<ReportedData.Row> rows = results.getRows();
                 for (ReportedData.Row row : rows) {
-                    Log.d("***", "xmpp:: row: " + row.getValues("Username").toString());
+                    Log.d("***", "xmpp:: row: " + row.getValues("Username").toString());  //***: xmpp:: row: [username]
                 }
             } else {
                 Log.d("***", "No result found");

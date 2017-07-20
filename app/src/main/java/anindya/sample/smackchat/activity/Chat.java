@@ -80,30 +80,30 @@ public class Chat extends AppCompatActivity {
 
     // add messages to the array list item from event bus
     private void addAMessage(String user, String message, String subject, String messageID) {
-      if (subject.equals("comment")) {
-          chatListObject = new ChatItem();
-          // check last message ID with last entered message ID in array list
-          if (!chatItem.isEmpty()) {
-              if (chatItem.get(chatItem.size() - 1).getChatMessageID() != messageID) {
-                  chatListObject.setChatText(message);
-                  chatListObject.setChatUserName(user);
-                  chatListObject.setChatMessageID(messageID);
-                  chatItem.add(chatListObject);
-              }
-          } else {
-              chatListObject.setChatText(message);
-              chatListObject.setChatUserName(user);
-              chatListObject.setChatMessageID(messageID);
-              chatItem.add(chatListObject);
-          }
-          runOnUiThread(new Runnable() {
-              @Override
-              public void run() {
-                  adapter.notifyDataSetChanged();
-                  mRecyclerView.scrollToPosition(chatItem.size() - 1);
-              }
-          });
-      }
+        if (subject.equals("comment")) {
+            chatListObject = new ChatItem();
+            // check last message ID with last entered message ID in array list
+            if (!chatItem.isEmpty()) {
+                if (chatItem.get(chatItem.size() - 1).getChatMessageID() != messageID) {
+                    chatListObject.setChatText(message);
+                    chatListObject.setChatUserName(user);
+                    chatListObject.setChatMessageID(messageID);
+                    chatItem.add(chatListObject);
+                }
+            } else {
+                chatListObject.setChatText(message);
+                chatListObject.setChatUserName(user);
+                chatListObject.setChatMessageID(messageID);
+                chatItem.add(chatListObject);
+            }
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    adapter.notifyDataSetChanged();
+                    mRecyclerView.scrollToPosition(chatItem.size() - 1);
+                }
+            });
+        }
     }
 
     @Override
@@ -184,8 +184,8 @@ public class Chat extends AppCompatActivity {
         chat_send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!chat_edit_text.getText().equals("")) {
-                    mChat = chat_edit_text.getText().toString();
+                mChat = chat_edit_text.getText().toString();
+                if (!mChat.isEmpty()) {
                     String mSubject = "comment";
                     sendMessage(mChat, mSubject);
                     chat_edit_text.setText("");
@@ -202,10 +202,10 @@ public class Chat extends AppCompatActivity {
         startService(intent);
     }
 
-    public void joinChatRoom(){
-        Intent intent = new Intent(getBaseContext(),ConnectXmpp.class );
+    public void joinChatRoom() {
+        Intent intent = new Intent(getBaseContext(), ConnectXmpp.class);
         intent.putExtra("user", userName);
-        intent.putExtra("code","1");
+        intent.putExtra("code", "1");
         startService(intent);
     }
 
