@@ -1,4 +1,4 @@
-package anindya.sample.smackchat;
+package anindya.sample.smackchat.activity;
 
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
@@ -23,11 +23,15 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
-/**
- * Created by user on 5/5/2017.
- */
+import anindya.sample.smackchat.R;
+import anindya.sample.smackchat.adapter.ChatAdapter;
+import anindya.sample.smackchat.model.ChatEvent;
+import anindya.sample.smackchat.model.ChatItem;
+import anindya.sample.smackchat.services.ConnectXmpp;
+import anindya.sample.smackchat.utils.LocalBinder;
+import anindya.sample.smackchat.utils.PrefManager;
+
 
 public class Chat extends AppCompatActivity {
     // list inflating variable
@@ -69,24 +73,37 @@ public class Chat extends AppCompatActivity {
         String chat = event.message;
         String from = event.from;
         String subject = event.subject;
-        Log.d("xmpp: ", "From: "+from+"\nSubject: "+subject+"\nChat: "+chat);
-        if (subject.equals("comment")){
-            addAMessage(from, chat);
-        }
+        String chatID = event.messageID;
+        Log.d("xmpp: ", "From: " + from + "\nSubject: " + subject + "\nChat: " + chat + "\nChat ID: " + chatID);
+        addAMessage(from, chat, subject, chatID);
     }
 
-    private void addAMessage(String user, String message) {
-        chatListObject = new ChatItem();
-        chatListObject.setChatText(message);
-        chatListObject.setChatUserName(user);
-        chatItem.add(chatListObject);
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    adapter.notifyDataSetChanged();
-                    mRecyclerView.scrollToPosition(chatItem.size() - 1);
-                }
-            });
+    // add messages to the array list item from event bus
+    private void addAMessage(String user, String message, String subject, String messageID) {
+      if (subject.equals("comment")) {
+          chatListObject = new ChatItem();
+          // check last message ID with last entered message ID in array list
+          if (!chatItem.isEmpty()) {
+              if (chatItem.get(chatItem.size() - 1).getChatMessageID() != messageID) {
+                  chatListObject.setChatText(message);
+                  chatListObject.setChatUserName(user);
+                  chatListObject.setChatMessageID(messageID);
+                  chatItem.add(chatListObject);
+              }
+          } else {
+              chatListObject.setChatText(message);
+              chatListObject.setChatUserName(user);
+              chatListObject.setChatMessageID(messageID);
+              chatItem.add(chatListObject);
+          }
+          runOnUiThread(new Runnable() {
+              @Override
+              public void run() {
+                  adapter.notifyDataSetChanged();
+                  mRecyclerView.scrollToPosition(chatItem.size() - 1);
+              }
+          });
+      }
     }
 
     @Override
@@ -131,8 +148,7 @@ public class Chat extends AppCompatActivity {
         // keyboard adjustment
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
-        Bundle bundle = getIntent().getExtras();
-        userName = bundle.getString("user");
+        userName = PrefManager.getUserName(Chat.this);
 
         mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setMessage("Loading Chat Data........");

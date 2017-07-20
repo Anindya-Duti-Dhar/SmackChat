@@ -1,17 +1,16 @@
-package anindya.sample.smackchat;
+package anindya.sample.smackchat.model;
 
-/**
- * Created by user on 5/8/2017.
- */
 
 public class ChatEvent {
     public final String from;
     public final String message;
     public final String subject;
+    public final String messageID;
 
-    public ChatEvent(String from, String message, String subject) {
+    public ChatEvent(String from, String message, String subject, String messageID) {
         this.message = message;
         this.from = from;
         this.subject = subject;
+        this.messageID = messageID;
     }
 }

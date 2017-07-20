@@ -1,3 +1,26 @@
 <resources>
     <string name="app_name">Sample Group Chat</string>
+
+    <string name="no_internet_connection">No internet connection</string>
+    <string name="retry">RETRY</string>
+
+    <!--Login Screen start-->
+    <string name="sign_up_dialog_message">Enjoy Live Streaming</string>
+    <string name="login_failed_message">Authentication failed</string>
+    <string name="valid_password">3 to 32 alphanumeric characters</string>
+    <string name="login_toolbar">Login</string>
+    <string name="success_dialog_title">Success</string>
+    <string name="valid_username3">username samsung is not allowed</string>
+    <string name="registration">Registration</string>
+    <string name="password_input_hint">Password</string>
+    <string name="username_hint">Username</string>
+    <string name="valid_username">3 to 64 characters excluding special characters</string>
+    <string name="valid_username2">Only alphanumeric characters allowed</string>
+    <string name="getting_ready">Getting ready...</string>
+    <string name="xmpp_signup_error">XMPP Signup Error!</string>
+    <string name="xmpp_signin_error">XMPP Signin Error!</string>
+    <string name="xmpp_connection_error">XMPP Connection Error!</string>
+    <string name="thanks">Thanks</string>
+    <!--Login Screen end-->
+    <string name="try_again">Try again</string>
 </resources>

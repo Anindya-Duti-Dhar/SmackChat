@@ -1,4 +1,4 @@
-package anindya.sample.smackchat;
+package anindya.sample.smackchat.utils;
 
 /**
  * Created by home on 10/1/2015.

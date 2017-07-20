@@ -1,8 +1,6 @@
-package anindya.sample.smackchat;
+package anindya.sample.smackchat.model;
 
-/**
- * Created by user on 5/5/2017.
- */
+
 
 public class ChatItem {
 
@@ -24,6 +22,16 @@ public class ChatItem {
 
     public void setChatUserName(String chatUserName) {
         this.chatUserName = chatUserName;
+    }
+
+    String chatMessageID;
+
+    public String getChatMessageID() {
+        return chatMessageID;
+    }
+
+    public void setChatMessageID(String chatMessageID) {
+        this.chatMessageID = chatMessageID;
     }
 
 }

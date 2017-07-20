@@ -1,4 +1,4 @@
-package anindya.sample.smackchat;
+package anindya.sample.smackchat.model;
 
 
 public class Roster {

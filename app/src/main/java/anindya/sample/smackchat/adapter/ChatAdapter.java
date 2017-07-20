@@ -1,4 +1,4 @@
-package anindya.sample.smackchat;
+package anindya.sample.smackchat.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
@@ -9,9 +9,9 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-/**
- * Created by user on 5/5/2017.
- */
+import anindya.sample.smackchat.R;
+import anindya.sample.smackchat.model.ChatItem;
+
 
 public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
 
@@ -38,13 +38,6 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
     public ChatAdapter(Context context, ArrayList<ChatItem> _data) {
         this._data = _data;
         mContext = context;
-/*        for (int i = 0; i < _data.size(); i++) {
-            ChatItem val = _data.get(i);
-            if (val.getChatText().equals("initxmpp")) {
-                _data.remove(i);
-                break;
-            }
-        }*/
     }
 
     @Override
