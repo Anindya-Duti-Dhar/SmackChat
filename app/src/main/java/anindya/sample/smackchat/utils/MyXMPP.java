@@ -28,6 +28,8 @@ import org.jivesoftware.smackx.iqregister.AccountManager;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.muc.RoomInfo;
+import org.jivesoftware.smackx.ping.PingFailedListener;
+import org.jivesoftware.smackx.ping.PingManager;
 import org.jivesoftware.smackx.search.ReportedData;
 import org.jivesoftware.smackx.search.UserSearch;
 import org.jivesoftware.smackx.search.UserSearchManager;
@@ -206,6 +208,9 @@ public class MyXMPP {
 
             sendBroadCast("signin", "done");
 
+            // send ping
+            sendPing();
+
             // Roster entry
             /*Roster roster = Roster.getInstanceFor(connection);
             try {
@@ -349,6 +354,23 @@ public class MyXMPP {
         } catch (SmackException.NotConnectedException e) {
             e.printStackTrace();
         }
+    }
+
+    // method for ping manager
+    public void sendPing(){
+        PingManager pm =  PingManager.getInstanceFor(connection) ;
+        pm.setPingInterval(5) ;  // 5 sec
+        try {
+            pm.pingMyServer() ;
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+        }
+        pm.registerPingFailedListener(new PingFailedListener() {
+            @Override
+            public void pingFailed() {
+                Log.e("xmpp: " , "Ping Failed") ;
+            }
+        });
     }
 
     // get room status
