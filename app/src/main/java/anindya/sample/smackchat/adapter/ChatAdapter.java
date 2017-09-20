@@ -63,7 +63,8 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
 
         TextView ChatUsername = viewHolder.chat_username;
         try {
-            ChatUsername.setText(data.getChatUserName());
+            String desiredUsername = data.getChatUserName();
+            ChatUsername.setText(toInitCap(desiredUsername));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -79,6 +80,19 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
     @Override
     public int getItemCount() {
         return _data.size();
+    }
+
+    // to set username start with upper case
+    public static String toInitCap(String param) {
+        if (param != null && param.length() > 0) {
+            char[] charArray = param.toCharArray();
+            charArray[0] = Character.toUpperCase(charArray[0]);
+            // set capital letter to first position
+            return new String(charArray);
+            // return desired output
+        } else {
+            return "";
+        }
     }
 
 }
