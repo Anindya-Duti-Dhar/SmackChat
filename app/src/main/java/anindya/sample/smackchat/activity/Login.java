@@ -119,7 +119,7 @@ public class Login extends AppCompatActivity {
                 if (intent.getAction().equals("signin")) {
                     mProgressDialog.hide();
                     PrefManager.setUserLoggedData(Login.this, "Yes");
-                    PrefManager.setUserName(Login.this, userName);
+                    PrefManager.setUserName(Login.this, userName.toLowerCase());
                     PrefManager.setUserPassword(Login.this, password);
                     handler = new Handler();
                     savedDialog = new SweetAlertDialog(Login.this, SweetAlertDialog.SUCCESS_TYPE);
@@ -243,7 +243,7 @@ public class Login extends AppCompatActivity {
         else {
             try {
                 Intent intent = new Intent(getBaseContext(), ConnectXmpp.class);
-                intent.putExtra("user", userName);
+                intent.putExtra("user", userName.toLowerCase());
                 intent.putExtra("pwd", password);
                 intent.putExtra("code", "0");
                 startService(intent);
@@ -272,7 +272,7 @@ public class Login extends AppCompatActivity {
                 userName = _usernameText.getText().toString();
                 password = _passwordText.getText().toString();
                 Intent intent = new Intent(getBaseContext(), ConnectXmpp.class);
-                intent.putExtra("user", userName);
+                intent.putExtra("user", userName.toLowerCase());
                 intent.putExtra("pwd", password);
                 intent.putExtra("code", "4");
                 startService(intent);
