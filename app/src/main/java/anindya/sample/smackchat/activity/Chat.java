@@ -211,9 +211,9 @@ public class Chat extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        Intent intent = new Intent(getBaseContext(), ConnectXmpp.class);
-        intent.putExtra("code", "3");
-        startService(intent);
+        //Intent intent = new Intent(getBaseContext(), ConnectXmpp.class);
+        //intent.putExtra("code", "3");
+        //startService(intent);
         super.onBackPressed();
     }
 }

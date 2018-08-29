@@ -1,10 +1,13 @@
 package anindya.sample.smackchat.services;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -64,10 +67,22 @@ public class ConnectXmpp extends Service {
             if (code.equals("0")) {
                 xmpp.initForLogin(userName, passWord);
                 xmpp.connectConnection();
-            }
+           }
             // join chat room
-            else if (code.equals("1")) {
+             else if (code.equals("1")) {
                 xmpp.joinChatRoom(userName, roomName);
+            }
+            // login and join chat room
+            else if (code.equals("122")) {
+                xmpp.initForLogin(userName, passWord);
+                xmpp.connectConnection();
+                final Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        xmpp.joinChatRoom(userName, roomName);
+                    }
+                }, 1000);
             }
             // send chat
             else if (code.equals("2")) {
@@ -108,7 +123,8 @@ public class ConnectXmpp extends Service {
                 xmpp.UserStatus(userName);
             }
         }
-        return START_NOT_STICKY;
+        //return START_NOT_STICKY;
+        return START_STICKY;
     }
 
     @Override
@@ -122,9 +138,21 @@ public class ConnectXmpp extends Service {
         // set user has no running session
         //PrefManager.setUserLoggedIn(context, "No");
         // unregister all receiver
-        unregisterReceiver(broadcastReceiver);
+        ///unregisterReceiver(broadcastReceiver);
         // disconnect user
         xmpp.disconnectConnection();
+        Intent intent = new Intent(getApplicationContext(), ConnectXmpp.class);
+        intent.putExtra("user", "sadaf");
+        intent.putExtra("pwd", "sadaf");
+        intent.putExtra("code", "122");
+        PendingIntent service = PendingIntent.getService(
+                getApplicationContext(),
+                1001,
+                intent,
+                PendingIntent.FLAG_ONE_SHOT);
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, 1000, service);
         Log.e("xmpp: ", "connection service going to be destroyed");
     }
 
