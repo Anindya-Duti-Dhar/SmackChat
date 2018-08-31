@@ -55,15 +55,24 @@ dependencies {
     // Open Fire Smack Chat
     //compile 'org.igniterealtime.smack:smack-android:4.1.4'
     // need to add the exclude for every smack dependencies.
-    compile ("org.igniterealtime.smack:smack-android:4.1.4") {
+    compile ('org.igniterealtime.smack:smack-android:4.1.4') {
         exclude group: 'xpp3', module: 'xpp3'
+        //exclude  group:'de.measite.minidns'
     }
     // Optional for XMPPTCPConnection
     compile 'org.igniterealtime.smack:smack-tcp:4.1.4'
+    // Optional for XMPPTCPConnection
+   // compile ('org.igniterealtime.smack:smack-tcp:4.1.4') {
+    //    exclude  group:'de.measite.minidns'
+   // }
+
+    //compile group: 'de.measite.minidns', name: 'minidns-hla', version: '0.2.2'
+
     // Optional for XMPP-IM (RFC 6121) support (Roster, Threaded Chats)
     compile 'org.igniterealtime.smack:smack-im:4.1.4'
     // Optional for XMPP extensions support
     compile 'org.igniterealtime.smack:smack-extensions:4.1.4'
+    compile 'org.igniterealtime.smack:smack-experimental:4.1.4'
     //Event Bus
     compile 'org.greenrobot:eventbus:3.0.0'
 

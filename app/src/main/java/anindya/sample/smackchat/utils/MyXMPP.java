@@ -12,18 +12,27 @@ import org.greenrobot.eventbus.EventBus;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
+import org.jivesoftware.smack.MessageListener;
+import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.chat.ChatManager;
+import org.jivesoftware.smack.chat.ChatManagerListener;
+import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.filter.MessageTypeFilter;
+import org.jivesoftware.smack.filter.PacketTypeFilter;
 import org.jivesoftware.smack.filter.StanzaFilter;
+import org.jivesoftware.smack.packet.DefaultExtensionElement;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
+import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
@@ -43,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import anindya.sample.smackchat.activity.Chat;
 import anindya.sample.smackchat.model.ChatEvent;
 import anindya.sample.smackchat.model.ChatItem;
 
@@ -53,6 +63,8 @@ import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_ADDRESS;
 import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_PORT;
 import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_RESOURCE_NAME;
 import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_SERVICE_NAME;
+import static org.jivesoftware.smack.roster.packet.RosterPacket.ItemType.from;
+import static org.jivesoftware.smack.roster.packet.RosterPacket.ItemType.to;
 
 /**
  * Created by user on 7/20/2017.
@@ -75,8 +87,13 @@ public class MyXMPP {
     MultiUserChatManager manager;
     private Context mContext;
 
+    ChatManager chatManager;
+    org.jivesoftware.smack.chat.Chat mChat;
+
     StanzaListener mStanzaListener;
+    StanzaListener mStanzaListener2;
     StanzaFilter filter;
+    StanzaFilter filter2;
     String mRoomName;
     String mServiceName;
     String mOwnerNick;
@@ -403,7 +420,8 @@ public class MyXMPP {
     public void configRoom(){
         Log.d("xmpp: ", "ready to receive messages in the chat room");
         // add listener for receiving messages
-        receiveMessages();
+        receiveGroupMessages();
+        receiveStanza();
         try {
             //room info
             mRoomInfo = manager.getRoomInfo(mRoomName + "@" + CHAT_ROOM_SERVICE_NAME+ CHAT_SERVER_SERVICE_NAME);
@@ -444,8 +462,8 @@ public class MyXMPP {
         }
     }
 
-    // send chat to the room
-    public void sendChat(String chat, String subject) {
+    // send message using multiUserChat to the room
+    public void sendGroupChat(String chat, String subject) {
         try {
             Message newMessage = new Message();
             newMessage.setBody(chat);
@@ -457,8 +475,34 @@ public class MyXMPP {
         }
     }
 
-    // received Messages from room
-    public void receiveMessages() {
+    // send message using Stanza of Smack
+    public void sendStanza(String chat, String subject){
+        Message message = new Message("duti"+ "@"+ CHAT_SERVER_SERVICE_NAME, Message.Type.chat);
+        message.setFrom(connection.getUser());
+        message.setBody(chat);
+        message.setSubject(subject);
+        try {
+            connection.sendStanza(message);
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // send message using Chat object of Smack
+    public void sendChat(String chat, String subject){
+        Message message = new Message("maya"+ "@"+ CHAT_SERVER_SERVICE_NAME, Message.Type.chat);
+        message.setFrom(connection.getUser());
+        message.setBody(chat);
+        message.setSubject(subject);
+        try {
+            mChat.sendMessage(message);
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // received Messages using multiUserChat from room
+    public void receiveGroupMessages() {
         if (connected) {
             chatItem = new ArrayList<ChatItem>();
             filter = MessageTypeFilter.GROUPCHAT;
@@ -474,11 +518,76 @@ public class MyXMPP {
                         String messageID = message.getStanzaId();
                         mSubject = message.getSubject();
                         Log.d("xmpp: ", "From: " + OnlyUserName + "\nSubject: " + mSubject + "\nMessage: " + body +"\nMessage ID: "+messageID);
+                        if(NotificationUtils.isAppIsInBackground(mContext)){
+                            Intent resultIntent = new Intent(mContext, Chat.class);
+                            resultIntent.putExtra("message", body);
+                            NotificationUtils notificationUtils = new NotificationUtils(mContext);
+                            notificationUtils.showNotificationMessage(mSubject, body, "", resultIntent);
+                        }
                         EventBus.getDefault().postSticky(new ChatEvent(OnlyUserName, body, mSubject, messageID));
                     }
                 }
             };
             connection.addSyncStanzaListener(mStanzaListener, filter);   // remove addAsyncStanzaListener to avoid duplicate messages
+        }
+    }
+
+    // received Messages from individual user by Stanza
+    public void receiveStanza(){
+        if (connected) {
+            filter2 = MessageTypeFilter.CHAT;
+            mStanzaListener2 = new StanzaListener() {
+                @Override
+                public void processPacket(Stanza packet) throws SmackException.NotConnectedException {
+                    Message message = (Message) packet;
+                    if (message.getBody() != null) {
+                        String from = message.getFrom();
+                        //String OnlyUserName = from.replace(mRoomName + "@"+ CHAT_ROOM_SERVICE_NAME + CHAT_SERVER_SERVICE_NAME+"\u002F", ""); //remove room name // (here \u002F is for forward slash)
+                        Log.d("xmpp: ", "Original sender 2: " + from);
+                        String body = message.getBody();
+                        String messageID = message.getStanzaId();
+                        mSubject = message.getSubject();
+                        Log.d("xmpp: ", "From 2: " + from + "\nSubject 2: " + mSubject + "\nMessage 2: " + body +"\nMessage ID 2: "+messageID);
+                        if(NotificationUtils.isAppIsInBackground(mContext)){
+                            Intent resultIntent = new Intent(mContext, Chat.class);
+                            resultIntent.putExtra("message", body);
+                            NotificationUtils notificationUtils = new NotificationUtils(mContext);
+                            notificationUtils.showNotificationMessage(mSubject, body, "", resultIntent);
+                        }
+                        //EventBus.getDefault().postSticky(new ChatEvent(OnlyUserName, body, mSubject, messageID));
+                    }
+                }
+            };
+            connection.addSyncStanzaListener(mStanzaListener2, filter2);   // remove addAsyncStanzaListener to avoid duplicate messages
+        }
+    }
+
+    // received Messages from individual user by ChatManager
+    public void receiveMessage(){
+        if(connection.isAuthenticated())
+        {
+            Log.w("app", "Auth done");
+            chatManager = ChatManager.getInstanceFor(connection);
+            chatManager.addChatListener(new ChatManagerListener() {
+                @Override
+                public void chatCreated(org.jivesoftware.smack.chat.Chat chat, boolean createdLocally) {
+                    mChat = chat;
+                    chat.addMessageListener(new ChatMessageListener() {
+                        @Override
+                        public void processMessage(org.jivesoftware.smack.chat.Chat chat, Message message) {
+                            String from = message.getFrom();
+                            String body = message.getBody();
+                            String subject = message.getSubject();
+                            String messageID = message.getStanzaId();
+                            System.out.println("Received message: "
+                                    + (message != null ? message.getBody() : "NULL"));
+                            Log.d("xmpp: ", "From 3: " + from + "\nSubject 3: " + subject + "\nMessage 3: " + body +"\nMessage ID 3: "+messageID);
+
+                        }
+                    });
+                    Log.w("app", chat.toString());
+                }
+            });
         }
     }
 

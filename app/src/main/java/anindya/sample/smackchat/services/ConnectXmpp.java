@@ -55,7 +55,7 @@ public class ConnectXmpp extends Service {
 
         if (intent != null) {
             try {
-                roomName = "demo";
+                roomName = "scibd";
                 userName = intent.getStringExtra("user");
                 passWord = intent.getStringExtra("pwd");
                 mChat = intent.getStringExtra("chat");
@@ -81,12 +81,14 @@ public class ConnectXmpp extends Service {
                     @Override
                     public void run() {
                         xmpp.joinChatRoom(userName, roomName);
+                        xmpp.receiveStanza();
                     }
                 }, 1000);
             }
             // send chat
             else if (code.equals("2")) {
-                xmpp.sendChat(mChat, mSubject);
+                xmpp.sendGroupChat(mChat, mSubject);
+                xmpp.sendStanza(mChat, mSubject);
             }
             // exit from chat room
             else if (code.equals("3")) {
@@ -99,8 +101,8 @@ public class ConnectXmpp extends Service {
             }
             // create chat room
             else if (code.equals("5")) {
-                xmpp.createPersistentRoom(userName);
-                //xmpp.createChatRoom(userName);
+                xmpp.createPersistentRoom(roomName);
+                //xmpp.createChatRoom(roomName);
             }
             // destroy chat room
             else if (code.equals("6")) {
@@ -116,7 +118,7 @@ public class ConnectXmpp extends Service {
             }
             // room status from the server
             else if (code.equals("10")) {
-                xmpp.getRoomStatus(userName);
+                xmpp.getRoomStatus(roomName);
             }
             // check user status from the server
             else if (code.equals("12")) {
@@ -142,8 +144,8 @@ public class ConnectXmpp extends Service {
         // disconnect user
         xmpp.disconnectConnection();
         Intent intent = new Intent(getApplicationContext(), ConnectXmpp.class);
-        intent.putExtra("user", "sadaf");
-        intent.putExtra("pwd", "sadaf");
+        intent.putExtra("user", userName);
+        intent.putExtra("pwd", passWord);
         intent.putExtra("code", "122");
         PendingIntent service = PendingIntent.getService(
                 getApplicationContext(),
