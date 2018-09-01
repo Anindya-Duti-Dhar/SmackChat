@@ -12,8 +12,10 @@ import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import anindya.sample.smackchat.activity.Login;
 import anindya.sample.smackchat.utils.LocalBinder;
 import anindya.sample.smackchat.utils.MyXMPP;
+import anindya.sample.smackchat.utils.PrefManager;
 
 import static anindya.sample.smackchat.utils.NetworkChecking.getConnectivityStatusString;
 
@@ -26,13 +28,7 @@ public class ConnectXmpp extends Service {
     private String mChat;
     private String mSubject;
     private MyXMPP xmpp = new MyXMPP(this);
-
-    private boolean internetConnected=true;
-
     Context context = this;
-
-    public ConnectXmpp() {
-    }
 
     @Override
     public void onCreate() {
@@ -49,10 +45,6 @@ public class ConnectXmpp extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d("xmpp: ", "connection service onStartCommand");
-
-        // register run time internet checking broadcast receiver
-        registerInternetCheckReceiver();
-
         if (intent != null) {
             try {
                 roomName = "scibd";
@@ -101,7 +93,7 @@ public class ConnectXmpp extends Service {
             }
             // create chat room
             else if (code.equals("5")) {
-                xmpp.createPersistentRoom(roomName);
+                xmpp.createPersistentRoom(userName, roomName);
                 //xmpp.createChatRoom(roomName);
             }
             // destroy chat room
@@ -110,7 +102,7 @@ public class ConnectXmpp extends Service {
             }
             // configure chat room after create new chat room
             else if (code.equals("7")) {
-                xmpp.configRoom();
+                xmpp.configRoom(roomName);
             }
             // logout from the server
             else if (code.equals("9")) {
@@ -137,15 +129,12 @@ public class ConnectXmpp extends Service {
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
-        // set user has no running session
-        //PrefManager.setUserLoggedIn(context, "No");
-        // unregister all receiver
-        ///unregisterReceiver(broadcastReceiver);
         // disconnect user
         xmpp.disconnectConnection();
+        // re launch service
         Intent intent = new Intent(getApplicationContext(), ConnectXmpp.class);
-        intent.putExtra("user", userName);
-        intent.putExtra("pwd", passWord);
+        intent.putExtra("user", PrefManager.getUserName(context));
+        intent.putExtra("pwd", PrefManager.getUserPassword(context));
         intent.putExtra("code", "122");
         PendingIntent service = PendingIntent.getService(
                 getApplicationContext(),
@@ -156,50 +145,6 @@ public class ConnectXmpp extends Service {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, 1000, service);
         Log.e("xmpp: ", "connection service going to be destroyed");
-    }
-
-    //Method to register runtime broadcast receiver to show internet connection status
-    private void registerInternetCheckReceiver() {
-        IntentFilter internetFilter = new IntentFilter();
-        internetFilter.addAction("android.net.wifi.STATE_CHANGE");
-        internetFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
-        registerReceiver(broadcastReceiver, internetFilter);
-    }
-
-
-    //Runtime Broadcast receiver inner class to capture internet connectivity events
-    public BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String status = getConnectivityStatusString(context);
-            String internetStatus="";
-            if(status.equalsIgnoreCase("Wifi enabled")||status.equalsIgnoreCase("Mobile data enabled")){
-                internetStatus="Internet Connected";
-            }else {
-                internetStatus="Lost Internet Connection";
-            }
-
-            if(internetStatus.equalsIgnoreCase("Lost Internet Connection")){
-                if(internetConnected){
-                    Log.d("xmpp", "service connectivity:: "+internetStatus);
-                    //PrefManager.setUserLoggedIn(context, "No");
-                    sendMessage(internetStatus);
-                    internetConnected=false;
-                }
-            }else{
-                if(!internetConnected){
-                    Log.d("xmpp", "service connectivity:: "+internetStatus);
-                    sendMessage(internetStatus);
-                    internetConnected=true;
-                }
-            }
-        }
-    };
-
-    public void sendMessage(String message){
-        Intent broadCastIntent = new Intent("internet");
-        broadCastIntent.putExtra("action", message);
-        LocalBroadcastManager.getInstance(context).sendBroadcast(broadCastIntent);
     }
 
 }

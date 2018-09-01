@@ -101,8 +101,8 @@ public class Login extends AppCompatActivity {
                 mProgressDialog.show();
                 // Initializing Internet Check
                 if (isWiFiConnected) {
-                    // go to login method
-                    login();
+                    // go to signUp method
+                    signUp();
                 } else {
                     mProgressDialog.hide();
                     // if there is no internet
@@ -154,11 +154,11 @@ public class Login extends AppCompatActivity {
         };
     }
 
-    public void login() {
-        Log.d(TAG, "Login");
+    public void signUp() {
+        Log.d(TAG, "signUp");
 
         if (!validate()) {
-            onLoginFailed();
+            onSignUpFailed();
             return;
         }
         // xmpp registration
@@ -172,7 +172,7 @@ public class Login extends AppCompatActivity {
         overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
     }
 
-    public void onLoginFailed() {
+    public void onSignUpFailed() {
         mProgressDialog.hide();
         Toast.makeText(getBaseContext(), getString(R.string.login_failed_message), Toast.LENGTH_LONG).show();
         _loginButton.setEnabled(true);

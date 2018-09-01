@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.greenrobot.eventbus.EventBus;
@@ -53,11 +54,13 @@ import java.util.Date;
 import java.util.List;
 
 import anindya.sample.smackchat.activity.Chat;
+import anindya.sample.smackchat.activity.SplashActivity;
 import anindya.sample.smackchat.model.ChatEvent;
 import anindya.sample.smackchat.model.ChatItem;
 
 
 import static anindya.sample.smackchat.utils.Const.ALTERNATE_CHAT_ROOM_REFERENCE;
+import static anindya.sample.smackchat.utils.Const.CHAT_DEMO_OPPONENT_NAME;
 import static anindya.sample.smackchat.utils.Const.CHAT_ROOM_SERVICE_NAME;
 import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_ADDRESS;
 import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_PORT;
@@ -72,9 +75,8 @@ import static org.jivesoftware.smack.roster.packet.RosterPacket.ItemType.to;
 
 public class MyXMPP {
 
-    String TAG = "MyXMPP";
-    private String userName = "";
-    private String passWord = "";
+    private String userName;
+    private String passWord;
     AbstractXMPPConnection connection;
     XMPPConnectionListener connectionListener = new XMPPConnectionListener();
     XMPPConnectionListener2 connectionListener2 = new XMPPConnectionListener2();
@@ -94,22 +96,7 @@ public class MyXMPP {
     StanzaListener mStanzaListener2;
     StanzaFilter filter;
     StanzaFilter filter2;
-    String mRoomName;
     String mServiceName;
-    String mOwnerNick;
-    String mRoomDescription;
-    String mRoomNameGetFromServer;
-    RoomInfo mRoomInfo;
-    Message msg;
-    String mRoomDescriptionFromServer;
-
-    ArrayList<ChatItem> chatItem;
-
-    RoomInfo info;
-    String mRoomStatus;
-
-    String mSubject;
-    String roomDestroyReason = "not interested in conversation";
 
 
     public MyXMPP(Context context) {
@@ -118,8 +105,8 @@ public class MyXMPP {
 
     //Initialize
     public void initForLogin(String userId, String pwd) {
-        this.userName = userId;
-        this.passWord = pwd;
+        userName = userId;
+        passWord = pwd;
         XMPPTCPConnectionConfiguration.Builder configBuilder = XMPPTCPConnectionConfiguration.builder();
         configBuilder.setUsernameAndPassword(userName, passWord);
         configBuilder.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
@@ -134,8 +121,8 @@ public class MyXMPP {
 
     //Initialize
     public void initForRegistration(String userId, String pwd) {
-        this.userName = userId;
-        this.passWord = pwd;
+        userName = userId;
+        passWord = pwd;
         XMPPTCPConnectionConfiguration.Builder configBuilder = XMPPTCPConnectionConfiguration.builder();
         configBuilder.setUsernameAndPassword(userName, passWord);
         configBuilder.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
@@ -150,11 +137,12 @@ public class MyXMPP {
 
     // Disconnect Function
     public void disconnectConnection() {
-
         new Thread(new Runnable() {
             @Override
             public void run() {
-                connection.disconnect();
+                if(connection.isConnected()){
+                    connection.disconnect();
+                }
             }
         }).start();
     }
@@ -215,13 +203,12 @@ public class MyXMPP {
     public void login() {
         try {
             connection.login(userName, passWord);
-            //Log.i("LOGIN", "Yey! We're connected to the Xmpp server!");
             Log.d("xmpp: ", "Login Success");
             Presence presence = new Presence(Presence.Type.available);
             connection.sendPacket(presence);
 
             // set extra information
-            //setMyExtraInfo();
+            setMyExtraInfo();
 
             sendBroadCast("signin", "done");
 
@@ -229,7 +216,7 @@ public class MyXMPP {
             sendPing();
 
             // Roster entry
-            /*Roster roster = Roster.getInstanceFor(connection);
+            Roster roster = Roster.getInstanceFor(connection);
             try {
                 roster.createEntry(userName + "@" + CHAT_SERVER_ADDRESS, userName, null);
             } catch (SmackException.NotLoggedInException e) {
@@ -241,7 +228,6 @@ public class MyXMPP {
             } catch (SmackException.NotConnectedException e) {
                 e.printStackTrace();
             }
-*/
 
         } catch (XMPPException | SmackException | IOException e) {
             e.printStackTrace();
@@ -256,16 +242,14 @@ public class MyXMPP {
 
     // join chat room function
     public void joinChatRoom(String userName, String roomName) {
-        mRoomName = roomName;
         try {
-            mServiceName = connection.getServiceName();
+            Log.d("xmpp: ", "Service Name: " + connection.getServiceName());
         } catch (Exception e) {
             e.printStackTrace();
             Log.d("xmpp: ", "service name error: "+e.getMessage());
         }
-        Log.d("xmpp: ", "Service Name: " + mServiceName);
         manager = MultiUserChatManager.getInstanceFor(connection);
-        multiUserChat = manager.getMultiUserChat(mRoomName+ "@" +CHAT_ROOM_SERVICE_NAME+CHAT_SERVER_SERVICE_NAME);
+        multiUserChat = manager.getMultiUserChat(roomName+ "@" +CHAT_ROOM_SERVICE_NAME + CHAT_SERVER_SERVICE_NAME);
         try {
             multiUserChat.join(userName);
         } catch (SmackException.NoResponseException e) {
@@ -287,12 +271,12 @@ public class MyXMPP {
             Log.d("xmpp: ", "user has Joined in the chat room");
             sendBroadCast("join", "done");
             //call method to configure room
-            configRoom();
+            configRoom(roomName);
 
             // get Roster
             getBuddies();
             //get user info
-            //getUserInfo();
+            getUserInfo(userName);
 
         }
     }
@@ -301,13 +285,13 @@ public class MyXMPP {
     // set current user additional information
     public void setMyExtraInfo(){
         VCard vcard = new VCard();
-        vcard.setFirstName("User");
-        vcard.setLastName("Testing");
-        vcard.setEmailHome("user@gmail.com");
-        vcard.setMiddleName("For");
-        vcard.setNickName("User");
-        vcard.setPhoneHome("Voice", "127838494");
-        vcard.setOrganization("IT Industry");
+        vcard.setFirstName(userName);
+        vcard.setLastName("Sci");
+        vcard.setEmailHome(userName+"@gmail.com");
+        vcard.setMiddleName("Developer");
+        vcard.setNickName("SCIBD");
+        vcard.setPhoneHome("Voice", "12783849404");
+        vcard.setOrganization("Save the Children");
         //vcard.setAvatar("" + image_path); //Image Path should be URL or Can be Byte Array etc.
         try {
             vcard.save(connection);
@@ -323,10 +307,10 @@ public class MyXMPP {
     }
 
     //get specific info
-    public void getUserInfo(){
+    public void getUserInfo(String userName){
         VCard card = new VCard();
         try {
-            card.load(connection, "user"+"@"+"153.126.152.115");
+            card.load(connection, userName+"@"+CHAT_SERVER_SERVICE_NAME);
         } catch (SmackException.NoResponseException e) {
             e.printStackTrace();
         } catch (XMPPException.XMPPErrorException e) {
@@ -392,49 +376,47 @@ public class MyXMPP {
 
     // get room status
     public void getRoomStatus(String roomName){
-        mRoomName = roomName;
         manager = MultiUserChatManager.getInstanceFor(connection);
         // Discover information about the room
         try {
-            info = manager.getRoomInfo(mRoomName + "@" + CHAT_ROOM_SERVICE_NAME + CHAT_SERVER_SERVICE_NAME);
+            manager.getRoomInfo(roomName + "@" + CHAT_ROOM_SERVICE_NAME + CHAT_SERVER_SERVICE_NAME);
             sendBroadCast("roominfo", "ok");
         } catch (SmackException.NoResponseException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Room Info Error: " + e.getMessage());
-            mRoomStatus = e.getMessage();
             sendBroadCast("roominfo", "yes"); //XMPPError: item-not-found - cancel
         } catch (XMPPException.XMPPErrorException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Room Info Error: " + e.getMessage());
-            mRoomStatus = e.getMessage();
-            sendBroadCast("roominfo", mRoomStatus);
+            sendBroadCast("roominfo", e.getMessage());
         } catch (SmackException.NotConnectedException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Room Info Error: " + e.getMessage());
-            mRoomStatus = e.getMessage();
-            sendBroadCast("roominfo", mRoomStatus);
+            sendBroadCast("roominfo", e.getMessage());
         }
     }
 
     // configure room for getting messages
-    public void configRoom(){
+    public void configRoom(String roomName){
         Log.d("xmpp: ", "ready to receive messages in the chat room");
         // add listener for receiving messages
-        receiveGroupMessages();
+        receiveGroupMessages(roomName);
         receiveStanza();
         try {
             //room info
-            mRoomInfo = manager.getRoomInfo(mRoomName + "@" + CHAT_ROOM_SERVICE_NAME+ CHAT_SERVER_SERVICE_NAME);
-            mOwnerNick = multiUserChat.getOwners().get(0).getNick();
-            mRoomNameGetFromServer = mRoomInfo.getName();
-            mRoomDescriptionFromServer = mRoomInfo.getDescription();
+            RoomInfo roomInfo = manager.getRoomInfo(roomName + "@" + CHAT_ROOM_SERVICE_NAME+ CHAT_SERVER_SERVICE_NAME);
+            String ownerNick = multiUserChat.getOwners().get(0).getNick();
+            String roomNameGetFromServer = roomInfo.getName();
+            String roomDescriptionFromServer = roomInfo.getDescription();
 
-            Log.d("xmpp: ", "Room Name: " + mRoomNameGetFromServer + " Room Description: " + mRoomDescriptionFromServer + " Room Owner Nick: " + mOwnerNick);
+            Log.d("xmpp: ", "Room Name: " + roomNameGetFromServer + " Room Description: " + roomInfo.getDescription() + " Room Owner Nick: " + ownerNick);
             // room list
-                /*for (int i = 0; i<manager.getHostedRooms("conference.webhawksit").size(); i++){
-                    Log.d("xmpp: ", "Room List Id: "+i+"\nRoom Name: "+manager.getHostedRooms("conference.webhawksit").get(i).getName()+"\nRoom JID: "+manager.getHostedRooms("conference.webhawksit").get(i).getJid());
-                }*/
-
+            int roomListSize = manager.getHostedRooms(CHAT_ROOM_SERVICE_NAME+ CHAT_SERVER_SERVICE_NAME).size();
+            if(roomListSize>0){
+                for (int i = 0; i<roomListSize; i++){
+                    Log.d("xmpp: ", "Room List Id: "+i+"\nRoom Name: "+manager.getHostedRooms(CHAT_ROOM_SERVICE_NAME+ CHAT_SERVER_SERVICE_NAME).get(i).getName()+"\nRoom JID: "+manager.getHostedRooms(CHAT_ROOM_SERVICE_NAME+ CHAT_SERVER_SERVICE_NAME).get(i).getJid());
+                }
+            }
         } catch (SmackException.NoResponseException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Get Room Configuration Error: "+e.getMessage());
@@ -477,7 +459,7 @@ public class MyXMPP {
 
     // send message using Stanza of Smack
     public void sendStanza(String chat, String subject){
-        Message message = new Message("duti"+ "@"+ CHAT_SERVER_SERVICE_NAME, Message.Type.chat);
+        Message message = new Message(CHAT_DEMO_OPPONENT_NAME+ "@"+ CHAT_SERVER_SERVICE_NAME, Message.Type.chat);
         message.setFrom(connection.getUser());
         message.setBody(chat);
         message.setSubject(subject);
@@ -490,7 +472,7 @@ public class MyXMPP {
 
     // send message using Chat object of Smack
     public void sendChat(String chat, String subject){
-        Message message = new Message("maya"+ "@"+ CHAT_SERVER_SERVICE_NAME, Message.Type.chat);
+        Message message = new Message("duti"+ "@"+ CHAT_SERVER_SERVICE_NAME, Message.Type.chat);
         message.setFrom(connection.getUser());
         message.setBody(chat);
         message.setSubject(subject);
@@ -502,9 +484,9 @@ public class MyXMPP {
     }
 
     // received Messages using multiUserChat from room
-    public void receiveGroupMessages() {
+    public void receiveGroupMessages(final String roomName) {
         if (connected) {
-            chatItem = new ArrayList<ChatItem>();
+            //ArrayList<ChatItem> chatItem = new ArrayList<ChatItem>();
             filter = MessageTypeFilter.GROUPCHAT;
             mStanzaListener = new StanzaListener() {
                 @Override
@@ -512,19 +494,13 @@ public class MyXMPP {
                     Message message = (Message) packet;
                     if (message.getBody() != null) {
                         String from = message.getFrom();
-                        String OnlyUserName = from.replace(mRoomName + "@"+ CHAT_ROOM_SERVICE_NAME + CHAT_SERVER_SERVICE_NAME+"\u002F", ""); //remove room name // (here \u002F is for forward slash)
+                        String OnlyUserName = from.replace(roomName + "@"+ CHAT_ROOM_SERVICE_NAME + CHAT_SERVER_SERVICE_NAME+"\u002F", ""); //remove room name // (here \u002F is for forward slash)
                         Log.d("xmpp: ", "Original sender: " + from);
                         String body = message.getBody();
                         String messageID = message.getStanzaId();
-                        mSubject = message.getSubject();
-                        Log.d("xmpp: ", "From: " + OnlyUserName + "\nSubject: " + mSubject + "\nMessage: " + body +"\nMessage ID: "+messageID);
-                        if(NotificationUtils.isAppIsInBackground(mContext)){
-                            Intent resultIntent = new Intent(mContext, Chat.class);
-                            resultIntent.putExtra("message", body);
-                            NotificationUtils notificationUtils = new NotificationUtils(mContext);
-                            notificationUtils.showNotificationMessage(mSubject, body, "", resultIntent);
-                        }
-                        EventBus.getDefault().postSticky(new ChatEvent(OnlyUserName, body, mSubject, messageID));
+                        String subject = message.getSubject();
+                        Log.d("xmpp: ", "From: " + OnlyUserName + "\nSubject: " + subject + "\nMessage: " + body +"\nMessage ID: "+messageID);
+                        EventBus.getDefault().postSticky(new ChatEvent(OnlyUserName, body, subject, messageID));
                     }
                 }
             };
@@ -542,19 +518,17 @@ public class MyXMPP {
                     Message message = (Message) packet;
                     if (message.getBody() != null) {
                         String from = message.getFrom();
-                        //String OnlyUserName = from.replace(mRoomName + "@"+ CHAT_ROOM_SERVICE_NAME + CHAT_SERVER_SERVICE_NAME+"\u002F", ""); //remove room name // (here \u002F is for forward slash)
-                        Log.d("xmpp: ", "Original sender 2: " + from);
                         String body = message.getBody();
                         String messageID = message.getStanzaId();
-                        mSubject = message.getSubject();
-                        Log.d("xmpp: ", "From 2: " + from + "\nSubject 2: " + mSubject + "\nMessage 2: " + body +"\nMessage ID 2: "+messageID);
+                        String subject = message.getSubject();
+                        Log.d("xmpp: ", "From 2: " + from + "\nSubject 2: " + subject + "\nMessage 2: " + body +"\nMessage ID 2: "+messageID);
                         if(NotificationUtils.isAppIsInBackground(mContext)){
-                            Intent resultIntent = new Intent(mContext, Chat.class);
+                            Intent resultIntent = new Intent(mContext, SplashActivity.class);
                             resultIntent.putExtra("message", body);
                             NotificationUtils notificationUtils = new NotificationUtils(mContext);
-                            notificationUtils.showNotificationMessage(mSubject, body, "", resultIntent);
+                            notificationUtils.showNotificationMessage(subject, body, "", resultIntent);
                         }
-                        //EventBus.getDefault().postSticky(new ChatEvent(OnlyUserName, body, mSubject, messageID));
+                        //EventBus.getDefault().postSticky(new ChatEvent(OnlyUserName, body, subject, messageID));
                     }
                 }
             };
@@ -592,15 +566,12 @@ public class MyXMPP {
     }
 
     // create persistent room
-    public void createPersistentRoom(String userName){
+    public void createPersistentRoom(String userName, String roomName){
         if (connection.isConnected()== true) {
-            mRoomName = userName;
-            mRoomDescription = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(new Date()); // current time
-            //mRoomDescription = "Live Streaming";
-            mServiceName = connection.getServiceName();
-            Log.d("xmpp: ", "Service Name: "+mServiceName);
+            String roomDescription = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(new Date()); // current time
+            Log.d("xmpp: ", "Service Name: "+connection.getServiceName());
             manager = MultiUserChatManager.getInstanceFor(connection);
-            multiUserChat = manager.getMultiUserChat(mRoomName+"@"+ CHAT_ROOM_SERVICE_NAME + CHAT_SERVER_SERVICE_NAME);
+            multiUserChat = manager.getMultiUserChat(roomName+"@"+ CHAT_ROOM_SERVICE_NAME + CHAT_SERVER_SERVICE_NAME);
             // Create the room
             try {
                 multiUserChat.create(userName);
@@ -634,7 +605,7 @@ public class MyXMPP {
             Form answerForm = form.createAnswerForm();
             answerForm.setAnswer("muc#roomconfig_publicroom", true);
             answerForm.setAnswer("muc#roomconfig_persistentroom", true);
-            answerForm.setAnswer("muc#roomconfig_roomdesc", mRoomDescription);
+            answerForm.setAnswer("muc#roomconfig_roomdesc", roomDescription);
             try {
                 // Send room configuration form which indicates that we want
                 multiUserChat.sendConfigurationForm(answerForm);
@@ -659,7 +630,7 @@ public class MyXMPP {
     // with broadcast
     public void destroyChatRoom(){
         try {
-            multiUserChat.destroy(roomDestroyReason, ALTERNATE_CHAT_ROOM_REFERENCE +"@"+ CHAT_ROOM_SERVICE_NAME + CHAT_SERVER_SERVICE_NAME);
+            multiUserChat.destroy("not interested in conversation", ALTERNATE_CHAT_ROOM_REFERENCE +"@"+ CHAT_ROOM_SERVICE_NAME + CHAT_SERVER_SERVICE_NAME);
             Log.d("xmpp: ", "Destroy Chat Room by button!");
             sendBroadCast("destroy", "done");
         } catch (SmackException.NoResponseException e) {
@@ -976,14 +947,13 @@ public class MyXMPP {
     }
 
     // create temporary chat room
-    public void createChatRoom(String userName) {
+    public void createChatRoom(String userName, String roomName) {
         if (connection.isConnected()== true) {
-            mRoomName = userName;
             manager = MultiUserChatManager.getInstanceFor(connection);
-            multiUserChat = manager.getMultiUserChat(mRoomName+"@"+ CHAT_ROOM_SERVICE_NAME + CHAT_SERVER_SERVICE_NAME);
+            multiUserChat = manager.getMultiUserChat(roomName+"@"+ CHAT_ROOM_SERVICE_NAME + CHAT_SERVER_SERVICE_NAME);
             // Create the room
             try {
-                multiUserChat.create(mRoomName);
+                multiUserChat.create(userName);
             } catch (XMPPException.XMPPErrorException e) {
                 e.printStackTrace();
                 Log.d("xmpp: ", "Temporary Chat Room Create Error: "+e.getMessage());

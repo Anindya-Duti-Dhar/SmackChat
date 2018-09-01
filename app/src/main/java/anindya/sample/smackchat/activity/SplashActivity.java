@@ -60,7 +60,7 @@ public class SplashActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         // TODO Auto-generated method stub
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "onCreate");
+        //Log.d(TAG, "onCreate");
 
         // added the following methods to awake the device from lock state and keep screen on so the broadcast messages could be received
         win = this.getWindow();
@@ -87,9 +87,9 @@ public class SplashActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         int versionNumber = pinfo.versionCode;
-        Log.d("xmpp: ", "version code: " + versionNumber);
+        //Log.d("xmpp: ", "version code: " + versionNumber);
         String versionName = pinfo.versionName;
-        Log.d("xmpp: ", "version name: " + versionName);
+        //Log.d("xmpp: ", "version name: " + versionName);
         // get current version code and name end
 
         mSplashMainContent = (RelativeLayout) findViewById(R.id.splash_main_content);
