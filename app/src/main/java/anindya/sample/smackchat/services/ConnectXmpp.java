@@ -74,6 +74,7 @@ public class ConnectXmpp extends Service {
                     public void run() {
                         xmpp.joinChatRoom(userName, roomName);
                         xmpp.receiveStanza();
+                        xmpp.getOldMessages();
                     }
                 }, 1000);
             }
