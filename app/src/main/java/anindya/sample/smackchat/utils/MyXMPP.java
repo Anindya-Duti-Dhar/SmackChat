@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
+import android.text.format.DateFormat;
 import android.util.Log;
 
 import org.greenrobot.eventbus.EventBus;
@@ -30,6 +31,7 @@ import org.jivesoftware.smack.packet.DefaultExtensionElement;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.packet.StandardExtensionElement;
 import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smack.roster.Roster;
@@ -51,6 +53,7 @@ import org.jivesoftware.smackx.muc.RoomInfo;
 import org.jivesoftware.smackx.offline.OfflineMessageManager;
 import org.jivesoftware.smackx.ping.PingFailedListener;
 import org.jivesoftware.smackx.ping.PingManager;
+import org.jivesoftware.smackx.push_notifications.PushNotificationsManager;
 import org.jivesoftware.smackx.receipts.DeliveryReceiptManager;
 import org.jivesoftware.smackx.receipts.ReceiptReceivedListener;
 import org.jivesoftware.smackx.search.ReportedData;
@@ -139,13 +142,13 @@ public class MyXMPP {
         configBuilder.setUsernameAndPassword(userName, passWord);
         configBuilder.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
 
-        InetAddress address = null;
+        /*InetAddress address = null;
         try {
             address = InetAddress.getByName(CHAT_SERVER_ADDRESS);
         } catch (UnknownHostException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Internet Address error: " + e.getMessage());
-        }
+        }*/
 
         HostnameVerifier verifier = new HostnameVerifier() {
             @Override
@@ -165,7 +168,8 @@ public class MyXMPP {
         configBuilder.setHost(CHAT_SERVER_ADDRESS);
         configBuilder.setXmppDomain(serviceName);
         configBuilder.setHostnameVerifier(verifier);
-        configBuilder.setHostAddress(address);
+        //configBuilder.setHostAddress(address);
+        configBuilder.setHost(CHAT_SERVER_ADDRESS);
         configBuilder.setPort(CHAT_SERVER_PORT);
         connection = new XMPPTCPConnection(configBuilder.build());
         connection.addConnectionListener(connectionListener);
@@ -180,13 +184,13 @@ public class MyXMPP {
         configBuilder.setUsernameAndPassword(userName, passWord);
         configBuilder.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
 
-        InetAddress address = null;
+       /* InetAddress address = null;
         try {
             address = InetAddress.getByName(CHAT_SERVER_ADDRESS);
         } catch (UnknownHostException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Internet Address error: " + e.getMessage());
-        }
+        }*/
 
         HostnameVerifier verifier = new HostnameVerifier() {
             @Override
@@ -206,7 +210,8 @@ public class MyXMPP {
         configBuilder.setHost(CHAT_SERVER_ADDRESS);
         configBuilder.setXmppDomain(serviceName);
         configBuilder.setHostnameVerifier(verifier);
-        configBuilder.setHostAddress(address);
+        //configBuilder.setHostAddress(address);
+        configBuilder.setHost(CHAT_SERVER_ADDRESS);
         configBuilder.setPort(CHAT_SERVER_PORT);
         connection = new XMPPTCPConnection(configBuilder.build());
         connection.addConnectionListener(connectionListener2);
@@ -488,7 +493,7 @@ public class MyXMPP {
             searchForm = manager.getSearchForm(serviceName);
             Form answerForm = searchForm.createAnswerForm();
             UserSearch userSearch = new UserSearch();
-            //answerForm.setAnswer("username", true);
+            //answerForm.setAnswer("Username", true);
             //answerForm.setAnswer("search", "*");
 
             ReportedData results = userSearch.sendSearchForm(connection, answerForm, serviceName);
@@ -708,11 +713,21 @@ public class MyXMPP {
 
     // send message using multiUserChat to the room
     public void sendGroupChat(String chat, String subject) {
-        Message newMessage = new Message();
-        newMessage.setBody(chat);
-        newMessage.setSubject(subject);
+        Message message = new Message();
+        message.setBody(chat);
+        message.setSubject(subject);
+
+        //Creating Standard packet extension with name as 'timestamp' and urn as 'urn:xmpp:timestamp'
+        StandardExtensionElement messageTimeStamp = StandardExtensionElement.builder(
+                "timestamp", "urn:xmpp:timestamp")
+                .addAttribute("timestamp", String.valueOf(System.currentTimeMillis()))  //Setting value in extension
+                .build();
+
+        //Add extension to message tag
+        message.addExtension(messageTimeStamp);
+
         try {
-            multiUserChat.sendMessage(newMessage);
+            multiUserChat.sendMessage(message);
         } catch (SmackException.NotConnectedException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Message send Error: " + e.getMessage());
@@ -735,6 +750,16 @@ public class MyXMPP {
         message.setFrom(connection.getUser());
         message.setBody(chat);
         message.setSubject(subject);
+
+        //Creating Standard packet extension with name as 'timestamp' and urn as 'urn:xmpp:timestamp'
+        StandardExtensionElement messageTimeStamp = StandardExtensionElement.builder(
+                "timestamp", "urn:xmpp:timestamp")
+                .addAttribute("timestamp", String.valueOf(System.currentTimeMillis()))  //Setting value in extension
+                .build();
+
+        //Add extension to message tag
+        message.addExtension(messageTimeStamp);
+
         try {
             connection.sendStanza(message);
         } catch (SmackException.NotConnectedException e) {
@@ -759,6 +784,16 @@ public class MyXMPP {
         message.setFrom(connection.getUser());
         message.setBody(chat);
         message.setSubject(subject);
+
+        //Creating Standard packet extension with name as 'timestamp' and urn as 'urn:xmpp:timestamp'
+        StandardExtensionElement messageTimeStamp = StandardExtensionElement.builder(
+                "timestamp", "urn:xmpp:timestamp")
+                .addAttribute("timestamp", String.valueOf(System.currentTimeMillis()))  //Setting value in extension
+                .build();
+
+        //Add extension to message tag
+        message.addExtension(messageTimeStamp);
+
         try {
             mChat.sendMessage(message);
         } catch (SmackException.NotConnectedException e) {
@@ -786,7 +821,16 @@ public class MyXMPP {
                         String body = message.getBody();
                         String messageID = message.getStanzaId();
                         String subject = message.getSubject();
-                        Log.d("xmpp: ", "From: " + OnlyUserName + "\nSubject: " + subject + "\nMessage: " + body + "\nMessage ID: " + messageID);
+
+                        //Get the extension from message
+                        StandardExtensionElement messageTimeStamp = (StandardExtensionElement) message
+                                .getExtension("urn:xmpp:timestamp");
+
+                        //Get the value from extension
+                        long timestampOriginal = Long.parseLong(messageTimeStamp.getAttributeValue("timestamp"));
+                        String timestamp = convertDate(timestampOriginal,"dd-MMM-yyyy h:mm a");
+
+                        Log.d("xmpp: ", "From: " + OnlyUserName + "\nTime: " + timestamp + "\nSubject: " + subject + "\nMessage: " + body + "\nMessage ID: " + messageID);
                         EventBus.getDefault().postSticky(new ChatEvent(OnlyUserName, body, subject, messageID));
                     }
                 }
@@ -808,7 +852,15 @@ public class MyXMPP {
                         String body = message.getBody();
                         String messageID = message.getStanzaId();
                         String subject = message.getSubject();
-                        Log.d("xmpp: ", "From 2: " + from + "\nSubject 2: " + subject + "\nMessage 2: " + body + "\nMessage ID 2: " + messageID);
+                        //Get the extension from message
+                        StandardExtensionElement messageTimeStamp = (StandardExtensionElement) message
+                                .getExtension("urn:xmpp:timestamp");
+
+                        //Get the value from extension
+                        long timestampOriginal = Long.parseLong(messageTimeStamp.getAttributeValue("timestamp"));
+                        String timestamp = convertDate(timestampOriginal,"dd-MMM-yyyy h:mm a");
+
+                        Log.d("xmpp: ", "From 2: " + from + "\nTime: " + timestamp + "\nSubject 2: " + subject + "\nMessage 2: " + body + "\nMessage ID 2: " + messageID);
                         if (NotificationUtils.isAppIsInBackground(mContext)) {
                             Intent resultIntent = new Intent(mContext, SplashActivity.class);
                             resultIntent.putExtra("message", body);
@@ -874,9 +926,18 @@ public class MyXMPP {
         if (forwardedMessages != null) {
             if (forwardedMessages.size() > 0) {
                 for (int i = 0; i < forwardedMessages.size(); i++) {
+                    //Get the extension from message
+                    StandardExtensionElement messageTimeStamp = (StandardExtensionElement) forwardedMessages
+                            .get(i).getExtension("urn:xmpp:timestamp");
+
+                    //Get the value from extension
+                    long timestampOriginal = Long.parseLong(messageTimeStamp.getAttributeValue("timestamp"));
+                    String timestamp = convertDate(timestampOriginal,"dd-MMM-yyyy h:mm a");
+
                     Log.d("xmpp: ", "Message Archive: " + "\n" +
-                            "Message From: " + forwardedMessages.get(i).getFrom() +
-                            "Message Body: " + forwardedMessages.get(i).getBody());
+                            " Message Time: " + timestamp +
+                            " Message From: " + forwardedMessages.get(i).getFrom() +
+                            " Message Body: " + forwardedMessages.get(i).getBody());
                 }
             }
         }
@@ -1377,6 +1438,10 @@ public class MyXMPP {
                 sendBroadCast("roomcreateerror", e.getMessage());
             }
         }
+    }
+
+    public static String convertDate(Long dateInMilliseconds,String dateFormat) {
+        return DateFormat.format(dateFormat, dateInMilliseconds).toString();
     }
 
 }
