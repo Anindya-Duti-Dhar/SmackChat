@@ -217,6 +217,7 @@ public class SplashActivity extends AppCompatActivity {
     // Launch Home Screen
     private void launchHomeScreen() {
         Intent i = new Intent(SplashActivity.this, UserListActivity.class);
+        //Intent i = new Intent(SplashActivity.this, Chat.class);
         startActivity(i);
         finish();
         overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);

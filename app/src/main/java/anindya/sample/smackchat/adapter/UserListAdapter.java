@@ -9,17 +9,14 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import anindya.sample.smackchat.R;
 import anindya.sample.smackchat.model.Users;
-import anindya.sample.smackchat.utils.MyXMPP;
 import anindya.sample.smackchat.utils.PrefManager;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHolder> {
-
-    String mUsername, mUserEmail;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public CircleImageView userImage;
@@ -36,22 +33,16 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
         }
     }
 
-    private ArrayList<Users> _data;
+    private List<Users> _data;
     private Context mContext;
-    private MyXMPP xmpp;
 
-    public UserListAdapter(Context context, ArrayList<Users> _data) {
+    public UserListAdapter(Context context, List<Users> _data) {
         this._data = _data;
         this.mContext = context;
-        xmpp = new MyXMPP(mContext);
         for (int i = 0; i < _data.size(); i++) {
             Users val = _data.get(i);
-            if (val.getUsername().equals(PrefManager.getUserName(context))) {
+            if ((val.getUsername().equals(PrefManager.getUserName(context)))) {
                 _data.remove(i);
-            }
-            if (val.getUsername().equals("admin")) {
-                _data.remove(i);
-                break;
             }
         }
     }
@@ -76,16 +67,11 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
         TextView username = viewHolder.username;
         username.setText(data.getUsername());
         TextView userEmail = viewHolder.userEmail;
-        userEmail.setText(data.getUsername()+"@gmail.com");
+        userEmail.setText(data.getEmail());
 
         ImageView userOnlineStatus = viewHolder.userOnlineStatus;
         userOnlineStatus.setImageResource(R.drawable.ic_online);
-        String status = xmpp.userStatus(data.getUsername());
-        if(status.equals("online")){
-            userOnlineStatus.setVisibility(View.VISIBLE);
-        } else {
-            userOnlineStatus.setVisibility(View.GONE);
-        }
+        userOnlineStatus.setVisibility(View.VISIBLE);
 
         TextView userNoImage = viewHolder.userNoImage;
         userNoImage.setVisibility(View.VISIBLE);
@@ -97,14 +83,6 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
     @Override
     public int getItemCount() {
         return _data.size();
-    }
-
-    public int getLastItemCount() {
-        return _data.size() - 1;
-    }
-
-    public void setItem(ArrayList<Users> users){
-        _data = users;
     }
 
 }

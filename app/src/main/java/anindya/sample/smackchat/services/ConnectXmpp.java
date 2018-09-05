@@ -82,6 +82,7 @@ public class ConnectXmpp extends Service {
             else if (code.equals("2")) {
                 xmpp.sendGroupChat(mChat, mSubject);
                 xmpp.sendStanza(mChat, mSubject);
+                //xmpp.sendFriendRequest(userName);
             }
             // exit from chat room
             else if (code.equals("3")) {

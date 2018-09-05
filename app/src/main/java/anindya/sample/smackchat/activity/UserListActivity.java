@@ -7,10 +7,12 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.RelativeLayout;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import anindya.sample.smackchat.R;
 import anindya.sample.smackchat.adapter.UserListAdapter;
@@ -19,7 +21,7 @@ import anindya.sample.smackchat.utils.MyXMPP;
 
 public class UserListActivity extends AppCompatActivity {
 
-    ArrayList<Users> userListArrayList = new ArrayList<Users>();
+    List<Users> userListArrayList = new ArrayList<Users>();
     RecyclerView mRecyclerView;
     UserListAdapter adapter;
     SwipeRefreshLayout refreshLayout;
@@ -36,10 +38,6 @@ public class UserListActivity extends AppCompatActivity {
         mLoadingProgress = (RelativeLayout) findViewById(R.id.loading_progress);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new UserListAdapter(this, userListArrayList);
-        mRecyclerView.setAdapter(adapter);
-
-        if(!isLoading)startLoadUsers();
 
         refreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_layout);
         refreshLayout.setColorSchemeColors(Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW);
@@ -50,14 +48,24 @@ public class UserListActivity extends AppCompatActivity {
             }
         });
 
+        if(!isLoading)startLoadUsers();
+
     }
 
     private void startLoadUsers() {
         if(mLoadingProgress.getVisibility()==View.GONE)mLoadingProgress.setVisibility(View.VISIBLE);
         isLoading = true;
-        userListArrayList = (ArrayList<Users>) xmpp.getAllUserList();
-        adapter.setItem(userListArrayList);
-        adapter.notifyDataSetChanged();
+        xmpp.getAllUserList(new MyXMPP.onLoadUserListener() {
+            @Override
+            public void onLoadUser(List<Users> users) {
+                if(users!=null){
+                    userListArrayList.clear();
+                    userListArrayList = users;
+                    adapter = new UserListAdapter(UserListActivity.this, userListArrayList);
+                    mRecyclerView.setAdapter(adapter);
+                }
+            }
+        });
         isLoading = false;
         refreshLayout.setRefreshing(false);
         if(mLoadingProgress.getVisibility()==View.VISIBLE)mLoadingProgress.setVisibility(View.GONE);

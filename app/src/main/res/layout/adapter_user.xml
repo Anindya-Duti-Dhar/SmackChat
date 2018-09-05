@@ -10,14 +10,12 @@
         android:id="@+id/item_card_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/md_white_1000"
         android:clickable="true"
-        android:elevation="5dp"
+        android:elevation="4dp"
         android:foreground="?android:attr/selectableItemBackground"
         app:ignore="NamespaceTypo"
-        card_view:cardCornerRadius="4dp"
-        card_view:cardUseCompatPadding="true">
-
+        card_view:cardCornerRadius="4dp">
+        <!--card_view:cardUseCompatPadding="true"-->
         <!--   Recycler View Item Row   -->
         <RelativeLayout
             android:layout_width="match_parent"

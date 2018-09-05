@@ -10,6 +10,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static anindya.sample.smackchat.utils.Const.REST_API_TOKEN;
 
 
 public class ApiCalls {
@@ -25,7 +26,7 @@ public class ApiCalls {
     }
 
     public void getAllUsers(){
-        Call<UserList> call = ApiClient.getClient().create(ApiInterface.class).getAllUser("application/json", "MP8KwYlwoCP1rUdY", "application/json");
+        Call<UserList> call = ApiClient.getClient().create(ApiInterface.class).getAllUser("application/json", REST_API_TOKEN, "application/json");
         call.enqueue(new Callback<UserList>() {
             @Override
             public void onResponse(Call<UserList> call, Response<UserList> response) {

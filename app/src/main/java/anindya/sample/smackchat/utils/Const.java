@@ -3,14 +3,15 @@ package anindya.sample.smackchat.utils;
 public class Const {
 
 	//openFire server communication data
-	public static final String CHAT_SERVER_ADDRESS = "ictsadaf.dhaka.org"; //"172.18.176.145"; //"192.168.0.102"; // you could replace with your local pc ip if mobile device is in same network
-	public static final String REST_API_ADDRESS = "http://"+CHAT_SERVER_ADDRESS+":9090/plugins/restapi/v1/";
+	public static final String CHAT_SERVER_ADDRESS = "192.168.0.102"; //"ictsadaf.dhaka.org"; //"172.18.176.145"; // you could replace with your local pc ip if mobile device is in same network
+	public static final String REST_API_TOKEN = "qZKC0FfkfDppNsHk"; // "MP8KwYlwoCP1rUdY";
+	public static final String CHAT_SERVER_SERVICE_NAME = "desktop-r1pbkha"; //"ictsadaf.dhaka.org"; // you could replace with yours
+	public static final String CHAT_DEMO_OPPONENT_NAME = "duti";
 	public static final int CHAT_SERVER_PORT = 5222;
-	public static final String CHAT_SERVER_SERVICE_NAME = "ictsadaf.dhaka.org"; //"desktop-r1pbkha";//"webhawksit";  // "153.126.152.115";
+	public static final String REST_API_ADDRESS = "http://"+CHAT_SERVER_ADDRESS+":9090/plugins/restapi/v1/";
 	public static final String CHAT_SERVER_RESOURCE_NAME = "Android";
 	public static final String CHAT_ROOM_SERVICE_NAME = "conference.";
 	public static final String ALTERNATE_CHAT_ROOM_REFERENCE = "demo";
-	public static final String CHAT_DEMO_OPPONENT_NAME = "duti";
 
 	// id to handle the notification in the notification tray
 	public static final int NOTIFICATION_ID = 100;

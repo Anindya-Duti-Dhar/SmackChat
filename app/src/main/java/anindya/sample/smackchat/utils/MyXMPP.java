@@ -38,6 +38,7 @@ import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.roster.RosterListener;
 import org.jivesoftware.smack.roster.RosterLoadedListener;
+import org.jivesoftware.smack.roster.SubscribeListener;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smack.util.StringUtils;
@@ -143,13 +144,13 @@ public class MyXMPP {
         configBuilder.setUsernameAndPassword(userName, passWord);
         configBuilder.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
 
-        /*InetAddress address = null;
+        InetAddress address = null;
         try {
             address = InetAddress.getByName(CHAT_SERVER_ADDRESS);
         } catch (UnknownHostException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Internet Address error: " + e.getMessage());
-        }*/
+        }
 
         HostnameVerifier verifier = new HostnameVerifier() {
             @Override
@@ -169,8 +170,8 @@ public class MyXMPP {
         configBuilder.setHost(CHAT_SERVER_ADDRESS);
         configBuilder.setXmppDomain(serviceName);
         configBuilder.setHostnameVerifier(verifier);
-        //configBuilder.setHostAddress(address);
-        configBuilder.setHost(CHAT_SERVER_ADDRESS);
+        configBuilder.setHostAddress(address);
+        //configBuilder.setHost(CHAT_SERVER_ADDRESS);
         configBuilder.setPort(CHAT_SERVER_PORT);
         connection = new XMPPTCPConnection(configBuilder.build());
         connection.addConnectionListener(connectionListener);
@@ -185,13 +186,13 @@ public class MyXMPP {
         configBuilder.setUsernameAndPassword(userName, passWord);
         configBuilder.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
 
-       /* InetAddress address = null;
+        InetAddress address = null;
         try {
             address = InetAddress.getByName(CHAT_SERVER_ADDRESS);
         } catch (UnknownHostException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Internet Address error: " + e.getMessage());
-        }*/
+        }
 
         HostnameVerifier verifier = new HostnameVerifier() {
             @Override
@@ -211,8 +212,8 @@ public class MyXMPP {
         configBuilder.setHost(CHAT_SERVER_ADDRESS);
         configBuilder.setXmppDomain(serviceName);
         configBuilder.setHostnameVerifier(verifier);
-        //configBuilder.setHostAddress(address);
-        configBuilder.setHost(CHAT_SERVER_ADDRESS);
+        configBuilder.setHostAddress(address);
+        //configBuilder.setHost(CHAT_SERVER_ADDRESS);
         configBuilder.setPort(CHAT_SERVER_PORT);
         connection = new XMPPTCPConnection(configBuilder.build());
         connection.addConnectionListener(connectionListener2);
@@ -239,7 +240,11 @@ public class MyXMPP {
             protected Boolean doInBackground(Void... arg0) {
                 try {
                     connection.connect();
+                    // send ping
+                    sendPing();
+                    // init message delivery reports
                     initMessageDeliveryStatus();
+                    receiveFriendRequest();
                     connected = true;
                     Log.d("xmpp: ", "Connection Success");
                 } catch (SmackException e) {
@@ -325,32 +330,6 @@ public class MyXMPP {
             // set extra information
             setMyExtraInfo();
             sendBroadCast("signin", "done");
-            // send ping
-            sendPing();
-            // Roster entry
-            Roster roster = Roster.getInstanceFor(connection);
-            BareJid jid = null;
-            try {
-                jid = JidCreate.bareFrom(userName + "@" + CHAT_SERVER_SERVICE_NAME);
-            } catch (XmppStringprepException e) {
-                e.printStackTrace();
-                Log.d("xmpp: ", "BareJid create Failure: " + e.getMessage());
-            }
-            try {
-                roster.createEntry(jid, userName, null);
-            } catch (SmackException.NotLoggedInException e) {
-                e.printStackTrace();
-                Log.d("xmpp: ", "Roster Entry Failure: " + e.getMessage());
-            } catch (SmackException.NoResponseException e) {
-                e.printStackTrace();
-                Log.d("xmpp: ", "Roster Entry Failure: " + e.getMessage());
-            } catch (XMPPException.XMPPErrorException e) {
-                e.printStackTrace();
-                Log.d("xmpp: ", "Roster Entry Failure: " + e.getMessage());
-            } catch (SmackException.NotConnectedException e) {
-                e.printStackTrace();
-                Log.d("xmpp: ", "Roster Entry Failure: " + e.getMessage());
-            }
         } catch (XMPPException | SmackException | IOException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Login Failure: " + e.getMessage());
@@ -365,13 +344,11 @@ public class MyXMPP {
     public void setMyExtraInfo() {
         VCard vcard = new VCard();
         vcard.setFirstName(userName);
-        vcard.setLastName("Sci");
         vcard.setEmailHome(userName + "@gmail.com");
-        vcard.setMiddleName("Developer");
-        vcard.setNickName("SCIBD");
+        vcard.setNickName(userName);
+        vcard.setField("Designation", "Developer");
         vcard.setPhoneHome("Voice", "12783849404");
         vcard.setOrganization("Save the Children");
-        //vcard.setAvatar("" + image_path); //Image Path should be URL or Can be Byte Array etc.
         try {
             vcard.save(connection);
         } catch (SmackException.NoResponseException e) {
@@ -387,6 +364,61 @@ public class MyXMPP {
             e.printStackTrace();
             Log.d("xmpp: ", "Extra Info Failed: " + e.getMessage());
         }
+    }
+
+    public void sendFriendRequest(String userName){
+        userName = "anindya";
+        // Roster entry
+        Roster roster = Roster.getInstanceFor(connection);
+        BareJid jid = null;
+        try {
+            jid = JidCreate.bareFrom(userName + "@" + CHAT_SERVER_SERVICE_NAME);
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "BareJid create Failure: " + e.getMessage());
+        }
+
+        Presence presence = new Presence(Presence.Type.subscribe);
+        presence.setTo(jid);
+        try {
+            connection.sendStanza(presence);
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            roster.createEntry(jid, userName, null);
+        } catch (SmackException.NotLoggedInException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Roster Entry Failure: " + e.getMessage());
+        } catch (SmackException.NoResponseException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Roster Entry Failure: " + e.getMessage());
+        } catch (XMPPException.XMPPErrorException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Roster Entry Failure: " + e.getMessage());
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Roster Entry Failure: " + e.getMessage());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Roster Entry Failure: " + e.getMessage());
+        }
+    }
+
+    public void receiveFriendRequest(){
+        Roster roster = Roster.getInstanceFor(connection);
+        roster.addSubscribeListener(new SubscribeListener() {
+            @Override
+            public SubscribeAnswer processSubscribe(Jid from, Presence subscribeRequest) {
+                if(subscribeRequest.getType()==Presence.Type.subscribe){
+                    Log.d("xmpp: ", "Friend request from: "+from);
+                }
+                return null;
+            }
+        });
     }
 
     // method for ping manager
@@ -682,14 +714,13 @@ public class MyXMPP {
                 }
             }
         }
-        // get all user
-        getAllUserList();
+
         // get current roster
-        getCurrentRoster();
+        //getCurrentRoster();
         // get Roster
-        getBuddies();
+        //getBuddies();
         //get user info
-        getUserInfo(userName);
+        //getUserInfo(userName);
     }
 
     // check current user status
@@ -1458,23 +1489,20 @@ public class MyXMPP {
         return DateFormat.format(dateFormat, dateInMilliseconds).toString();
     }
 
-    List<Users> userList;
-    public List<Users> getAllUserList(){
-        userList = new ArrayList<Users>();
+    public interface onLoadUserListener {
+        void onLoadUser(List<Users> users);
+    }
+
+    public void getAllUserList(onLoadUserListener listener){
+        final onLoadUserListener onLoadUserListener = listener;
         ApiCalls apiCalls = new ApiCalls();
         apiCalls.setLoadUserListener(new ApiCalls.onLoadUserListener() {
             @Override
             public void onHttpResponse(List<Users> users) {
-                if(users!=null){
-                    userList = users;
-                    for (Users u: users) {
-                        Log.d("xmpp: ", "Api All User" + u.getUsername());
-                    }
-                }
+                    if(onLoadUserListener!=null)onLoadUserListener.onLoadUser(users);
             }
         });
         apiCalls.getAllUsers();
-        return userList;
     }
 
 }
