@@ -88,6 +88,7 @@ import anindya.sample.smackchat.activity.Chat;
 import anindya.sample.smackchat.activity.SplashActivity;
 import anindya.sample.smackchat.model.ChatEvent;
 import anindya.sample.smackchat.model.ChatItem;
+import anindya.sample.smackchat.model.Users;
 
 
 import static anindya.sample.smackchat.utils.Const.ALTERNATE_CHAT_ROOM_REFERENCE;
@@ -681,6 +682,8 @@ public class MyXMPP {
                 }
             }
         }
+        // get all user
+        getAllUserList();
         // get current roster
         getCurrentRoster();
         // get Roster
@@ -690,7 +693,8 @@ public class MyXMPP {
     }
 
     // check current user status
-    public void UserStatus(String userName) {
+    public String userStatus(String userName) {
+        String status = "offline";
         Roster roster = Roster.getInstanceFor(connection);
         BareJid jid = null;
         try {
@@ -702,13 +706,16 @@ public class MyXMPP {
         Presence presence = roster.getPresence(jid);
         if (presence.getType() == Presence.Type.available) {
             // User is online...
+            status = "online";
             Log.d("xmpp: ", "user Online");
             sendBroadCast("userstatus", "online");
         } else {
             // User is Offline...
+            status = "offline";
             Log.d("xmpp: ", "user Offline");
             sendBroadCast("userstatus", "offline");
         }
+        return status;
     }
 
     // send message using multiUserChat to the room
@@ -826,9 +833,12 @@ public class MyXMPP {
                         StandardExtensionElement messageTimeStamp = (StandardExtensionElement) message
                                 .getExtension("urn:xmpp:timestamp");
 
+                        String timestamp = "";
                         //Get the value from extension
-                        long timestampOriginal = Long.parseLong(messageTimeStamp.getAttributeValue("timestamp"));
-                        String timestamp = convertDate(timestampOriginal,"dd-MMM-yyyy h:mm a");
+                        if(messageTimeStamp!=null) {
+                            long timestampOriginal = Long.parseLong(messageTimeStamp.getAttributeValue("timestamp"));
+                            timestamp = convertDate(timestampOriginal, "dd-MMM-yyyy h:mm a");
+                        }
 
                         Log.d("xmpp: ", "From: " + OnlyUserName + "\nTime: " + timestamp + "\nSubject: " + subject + "\nMessage: " + body + "\nMessage ID: " + messageID);
                         EventBus.getDefault().postSticky(new ChatEvent(OnlyUserName, body, subject, messageID));
@@ -856,9 +866,12 @@ public class MyXMPP {
                         StandardExtensionElement messageTimeStamp = (StandardExtensionElement) message
                                 .getExtension("urn:xmpp:timestamp");
 
+                        String timestamp = "";
                         //Get the value from extension
-                        long timestampOriginal = Long.parseLong(messageTimeStamp.getAttributeValue("timestamp"));
-                        String timestamp = convertDate(timestampOriginal,"dd-MMM-yyyy h:mm a");
+                        if(messageTimeStamp!=null) {
+                            long timestampOriginal = Long.parseLong(messageTimeStamp.getAttributeValue("timestamp"));
+                            timestamp = convertDate(timestampOriginal, "dd-MMM-yyyy h:mm a");
+                        }
 
                         Log.d("xmpp: ", "From 2: " + from + "\nTime: " + timestamp + "\nSubject 2: " + subject + "\nMessage 2: " + body + "\nMessage ID 2: " + messageID);
                         if (NotificationUtils.isAppIsInBackground(mContext)) {
@@ -927,12 +940,13 @@ public class MyXMPP {
             if (forwardedMessages.size() > 0) {
                 for (int i = 0; i < forwardedMessages.size(); i++) {
                     //Get the extension from message
-                    StandardExtensionElement messageTimeStamp = (StandardExtensionElement) forwardedMessages
-                            .get(i).getExtension("urn:xmpp:timestamp");
-
+                    StandardExtensionElement messageTimeStamp = (StandardExtensionElement) forwardedMessages.get(i).getExtension("urn:xmpp:timestamp");
+                    String timestamp = "";
                     //Get the value from extension
-                    long timestampOriginal = Long.parseLong(messageTimeStamp.getAttributeValue("timestamp"));
-                    String timestamp = convertDate(timestampOriginal,"dd-MMM-yyyy h:mm a");
+                    if(messageTimeStamp!=null){
+                        long timestampOriginal = Long.parseLong(messageTimeStamp.getAttributeValue("timestamp"));
+                        timestamp = convertDate(timestampOriginal,"dd-MMM-yyyy h:mm a");
+                    }
 
                     Log.d("xmpp: ", "Message Archive: " + "\n" +
                             " Message Time: " + timestamp +
@@ -1442,6 +1456,21 @@ public class MyXMPP {
 
     public static String convertDate(Long dateInMilliseconds,String dateFormat) {
         return DateFormat.format(dateFormat, dateInMilliseconds).toString();
+    }
+
+    public void getAllUserList(){
+        ApiCalls apiCalls = new ApiCalls();
+        apiCalls.setLoadUserListener(new ApiCalls.onLoadUserListener() {
+            @Override
+            public void onHttpResponse(List<Users> users) {
+                if(users!=null){
+                    for (Users u: users) {
+                        Log.d("xmpp: ", "Api All User" + u.getUsername());
+                    }
+                }
+            }
+        });
+        apiCalls.getAllUsers();
     }
 
 }

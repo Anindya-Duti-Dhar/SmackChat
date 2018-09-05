@@ -115,7 +115,7 @@ public class ConnectXmpp extends Service {
             }
             // check user status from the server
             else if (code.equals("12")) {
-                xmpp.UserStatus(userName);
+                xmpp.userStatus(userName);
             }
         }
         //return START_NOT_STICKY;
