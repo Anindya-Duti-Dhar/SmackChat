@@ -1458,12 +1458,15 @@ public class MyXMPP {
         return DateFormat.format(dateFormat, dateInMilliseconds).toString();
     }
 
-    public void getAllUserList(){
+    List<Users> userList;
+    public List<Users> getAllUserList(){
+        userList = new ArrayList<Users>();
         ApiCalls apiCalls = new ApiCalls();
         apiCalls.setLoadUserListener(new ApiCalls.onLoadUserListener() {
             @Override
             public void onHttpResponse(List<Users> users) {
                 if(users!=null){
+                    userList = users;
                     for (Users u: users) {
                         Log.d("xmpp: ", "Api All User" + u.getUsername());
                     }
@@ -1471,6 +1474,7 @@ public class MyXMPP {
             }
         });
         apiCalls.getAllUsers();
+        return userList;
     }
 
 }

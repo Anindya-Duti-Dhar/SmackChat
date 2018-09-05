@@ -38,6 +38,8 @@
 
         <activity android:name=".activity.Chat"/>
 
+        <activity android:name=".activity.UserListActivity"/>
+
         <receiver android:name=".utils.BootCompletedIntentReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

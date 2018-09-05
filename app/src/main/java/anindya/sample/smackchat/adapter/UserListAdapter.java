@@ -103,4 +103,8 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
         return _data.size() - 1;
     }
 
+    public void setItem(ArrayList<Users> users){
+        _data = users;
+    }
+
 }
