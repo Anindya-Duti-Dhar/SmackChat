@@ -3,21 +3,20 @@ package anindya.sample.smackchat.services;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import anindya.sample.smackchat.activity.Login;
+import org.jivesoftware.smack.packet.Presence;
+
 import anindya.sample.smackchat.utils.LocalBinder;
 import anindya.sample.smackchat.utils.MyXMPP;
 import anindya.sample.smackchat.utils.PrefManager;
 
-import static anindya.sample.smackchat.utils.NetworkChecking.getConnectivityStatusString;
+import static anindya.sample.smackchat.utils.Const.CHAT_DEMO_OPPONENT_NAME;
+import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_SERVICE_NAME;
 
 
 public class ConnectXmpp extends Service {
@@ -81,8 +80,8 @@ public class ConnectXmpp extends Service {
             // send chat
             else if (code.equals("2")) {
                 xmpp.sendGroupChat(mChat, mSubject);
-                xmpp.sendStanza(mChat, mSubject);
-                //xmpp.sendFriendRequest(userName);
+                xmpp.sendStanza(CHAT_DEMO_OPPONENT_NAME, mChat, mSubject);
+                xmpp.sendFriendRequest(CHAT_DEMO_OPPONENT_NAME + "@" + CHAT_SERVER_SERVICE_NAME, Presence.Type.subscribe);
             }
             // exit from chat room
             else if (code.equals("3")) {

@@ -6,7 +6,6 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
-import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.util.Log;
 
@@ -14,8 +13,6 @@ import org.greenrobot.eventbus.EventBus;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
-import org.jivesoftware.smack.MessageListener;
-import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPConnection;
@@ -24,27 +21,18 @@ import org.jivesoftware.smack.chat.ChatManager;
 import org.jivesoftware.smack.chat.ChatManagerListener;
 import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.filter.MessageTypeFilter;
-import org.jivesoftware.smack.filter.PacketFilter;
-import org.jivesoftware.smack.filter.PacketTypeFilter;
 import org.jivesoftware.smack.filter.StanzaFilter;
-import org.jivesoftware.smack.packet.DefaultExtensionElement;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.StandardExtensionElement;
 import org.jivesoftware.smack.packet.Stanza;
-import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
-import org.jivesoftware.smack.roster.RosterListener;
 import org.jivesoftware.smack.roster.RosterLoadedListener;
 import org.jivesoftware.smack.roster.SubscribeListener;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
-import org.jivesoftware.smack.util.StringUtils;
-import org.jivesoftware.smackx.iqprivate.PrivateDataManager;
 import org.jivesoftware.smackx.iqregister.AccountManager;
-import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.mam.MamManager;
 import org.jivesoftware.smackx.muc.HostedRoom;
 import org.jivesoftware.smackx.muc.MultiUserChat;
@@ -54,7 +42,6 @@ import org.jivesoftware.smackx.muc.RoomInfo;
 import org.jivesoftware.smackx.offline.OfflineMessageManager;
 import org.jivesoftware.smackx.ping.PingFailedListener;
 import org.jivesoftware.smackx.ping.PingManager;
-import org.jivesoftware.smackx.push_notifications.PushNotificationsManager;
 import org.jivesoftware.smackx.receipts.DeliveryReceiptManager;
 import org.jivesoftware.smackx.receipts.ReceiptReceivedListener;
 import org.jivesoftware.smackx.search.ReportedData;
@@ -73,22 +60,16 @@ import org.jxmpp.jid.parts.Resourcepart;
 import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 
-import anindya.sample.smackchat.activity.Chat;
-import anindya.sample.smackchat.activity.SplashActivity;
+import anindya.sample.smackchat.activities.SplashActivity;
 import anindya.sample.smackchat.model.ChatEvent;
-import anindya.sample.smackchat.model.ChatItem;
 import anindya.sample.smackchat.model.Users;
 
 
@@ -97,10 +78,7 @@ import static anindya.sample.smackchat.utils.Const.CHAT_DEMO_OPPONENT_NAME;
 import static anindya.sample.smackchat.utils.Const.CHAT_ROOM_SERVICE_NAME;
 import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_ADDRESS;
 import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_PORT;
-import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_RESOURCE_NAME;
 import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_SERVICE_NAME;
-import static org.jivesoftware.smack.roster.packet.RosterPacket.ItemType.from;
-import static org.jivesoftware.smack.roster.packet.RosterPacket.ItemType.to;
 
 /**
  * Created by user on 7/20/2017.
@@ -144,13 +122,13 @@ public class MyXMPP {
         configBuilder.setUsernameAndPassword(userName, passWord);
         configBuilder.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
 
-        InetAddress address = null;
+        /*InetAddress address = null;
         try {
             address = InetAddress.getByName(CHAT_SERVER_ADDRESS);
         } catch (UnknownHostException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Internet Address error: " + e.getMessage());
-        }
+        }*/
 
         HostnameVerifier verifier = new HostnameVerifier() {
             @Override
@@ -170,8 +148,8 @@ public class MyXMPP {
         configBuilder.setHost(CHAT_SERVER_ADDRESS);
         configBuilder.setXmppDomain(serviceName);
         configBuilder.setHostnameVerifier(verifier);
-        configBuilder.setHostAddress(address);
-        //configBuilder.setHost(CHAT_SERVER_ADDRESS);
+        //configBuilder.setHostAddress(address);
+        configBuilder.setHost(CHAT_SERVER_ADDRESS);
         configBuilder.setPort(CHAT_SERVER_PORT);
         connection = new XMPPTCPConnection(configBuilder.build());
         connection.addConnectionListener(connectionListener);
@@ -186,13 +164,13 @@ public class MyXMPP {
         configBuilder.setUsernameAndPassword(userName, passWord);
         configBuilder.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
 
-        InetAddress address = null;
+        /*InetAddress address = null;
         try {
             address = InetAddress.getByName(CHAT_SERVER_ADDRESS);
         } catch (UnknownHostException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Internet Address error: " + e.getMessage());
-        }
+        }*/
 
         HostnameVerifier verifier = new HostnameVerifier() {
             @Override
@@ -212,8 +190,8 @@ public class MyXMPP {
         configBuilder.setHost(CHAT_SERVER_ADDRESS);
         configBuilder.setXmppDomain(serviceName);
         configBuilder.setHostnameVerifier(verifier);
-        configBuilder.setHostAddress(address);
-        //configBuilder.setHost(CHAT_SERVER_ADDRESS);
+        //configBuilder.setHostAddress(address);
+        configBuilder.setHost(CHAT_SERVER_ADDRESS);
         configBuilder.setPort(CHAT_SERVER_PORT);
         connection = new XMPPTCPConnection(configBuilder.build());
         connection.addConnectionListener(connectionListener2);
@@ -366,19 +344,18 @@ public class MyXMPP {
         }
     }
 
-    public void sendFriendRequest(String userName){
-        userName = "anindya";
+    public void sendFriendRequest(String userName, Presence.Type type){
         // Roster entry
         Roster roster = Roster.getInstanceFor(connection);
         BareJid jid = null;
         try {
-            jid = JidCreate.bareFrom(userName + "@" + CHAT_SERVER_SERVICE_NAME);
+            jid = JidCreate.bareFrom(userName);
         } catch (XmppStringprepException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "BareJid create Failure: " + e.getMessage());
         }
 
-        Presence presence = new Presence(Presence.Type.subscribe);
+        Presence presence = new Presence(type);
         presence.setTo(jid);
         try {
             connection.sendStanza(presence);
@@ -414,9 +391,61 @@ public class MyXMPP {
             @Override
             public SubscribeAnswer processSubscribe(Jid from, Presence subscribeRequest) {
                 if(subscribeRequest.getType()==Presence.Type.subscribe){
-                    Log.d("xmpp: ", "Friend request from: "+from);
+                    String username = String.valueOf(from);//.replace("@" + CHAT_SERVER_SERVICE_NAME + "\u002F", "");
+                    Log.d("xmpp: ", "Friend request from: "+username);
+                    sendFriendRequest(username, Presence.Type.subscribed);
+                    sendFriendRequest(username, Presence.Type.subscribe);
                 }
                 return null;
+            }
+        });
+    }
+
+    public void getFriendList(){
+        Roster roster = Roster.getInstanceFor(connection);
+        if (roster != null && !roster.isLoaded()) {
+            try{
+                roster.reloadAndWait();
+                Log.d("xmpp:::::: ", "All User reloaded");
+            }catch (Exception e){
+                e.printStackTrace();
+                Log.d("xmpp::::::: ", "All User failed: " + e.getMessage());
+            }
+        }
+
+        if (roster != null){
+            Collection<RosterEntry> entries = roster.getEntries();
+            Presence presence;
+            for(RosterEntry entry : entries) {
+                presence = roster.getPresence(entry.getJid());
+                Log.d("xmpp: ", "Friend list: id:: "+entry.getJid());
+                Log.d("xmpp: ", "Friend list: name:: "+entry.getName());
+                Log.d("xmpp: ", "Friend list: user:: "+entry.getUser());
+                Log.d("xmpp: ", "Friend list: type:: "+presence.getType().name());
+                Log.d("xmpp: ", "Friend list: status:: "+presence.getStatus());
+            }
+        }
+
+        roster.addRosterLoadedListener(new RosterLoadedListener() {
+            @Override
+            public void onRosterLoaded(Roster roster) {
+                if (roster != null){
+                    Collection<RosterEntry> entries = roster.getEntries();
+                    Presence presence;
+                    for(RosterEntry entry : entries) {
+                        presence = roster.getPresence(entry.getJid());
+                        Log.d("xmpp: ", "Friend list2: id:: "+entry.getJid());
+                        Log.d("xmpp: ", "Friend list2: name:: "+entry.getName());
+                        Log.d("xmpp: ", "Friend list2: user:: "+entry.getUser());
+                        Log.d("xmpp: ", "Friend list2: type:: "+presence.getType().name());
+                        Log.d("xmpp: ", "Friend list2: status:: "+presence.getStatus());
+                    }
+                }
+            }
+
+            @Override
+            public void onRosterLoadingFailed(Exception e) {
+                Log.d("xmpp:::::::: ", "All User failed: " + e.getMessage());
             }
         });
     }
@@ -715,6 +744,8 @@ public class MyXMPP {
             }
         }
 
+        // get friend list
+        getFriendList();
         // get current roster
         //getCurrentRoster();
         // get Roster
@@ -776,10 +807,10 @@ public class MyXMPP {
     }
 
     // send message using Stanza of Smack
-    public void sendStanza(String chat, String subject) {
+    public void sendStanza(String username, String chat, String subject) {
         Jid jid = null;
         try {
-            jid = JidCreate.bareFrom(CHAT_DEMO_OPPONENT_NAME + "@" + CHAT_SERVER_SERVICE_NAME);
+            jid = JidCreate.bareFrom(username + "@" + CHAT_SERVER_SERVICE_NAME);
         } catch (XmppStringprepException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "BareJid create Failure: " + e.getMessage());

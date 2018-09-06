@@ -1,4 +1,4 @@
-package anindya.sample.smackchat.activity;
+package anindya.sample.smackchat.activities;
 
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
@@ -216,7 +216,8 @@ public class SplashActivity extends AppCompatActivity {
 
     // Launch Home Screen
     private void launchHomeScreen() {
-        Intent i = new Intent(SplashActivity.this, UserListActivity.class);
+        Intent i = new Intent(SplashActivity.this, HomeActivity.class);
+        //Intent i = new Intent(SplashActivity.this, UserListActivity.class);
         //Intent i = new Intent(SplashActivity.this, Chat.class);
         startActivity(i);
         finish();

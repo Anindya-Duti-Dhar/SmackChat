@@ -1,4 +1,4 @@
-package anindya.sample.smackchat.activity;
+package anindya.sample.smackchat.activities;
 
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
