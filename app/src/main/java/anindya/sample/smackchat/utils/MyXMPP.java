@@ -60,7 +60,10 @@ import org.jxmpp.jid.parts.Resourcepart;
 import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -70,6 +73,7 @@ import javax.net.ssl.SSLSession;
 
 import anindya.sample.smackchat.activities.SplashActivity;
 import anindya.sample.smackchat.model.ChatEvent;
+import anindya.sample.smackchat.model.MyFriend;
 import anindya.sample.smackchat.model.Users;
 
 
@@ -122,13 +126,13 @@ public class MyXMPP {
         configBuilder.setUsernameAndPassword(userName, passWord);
         configBuilder.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
 
-        /*InetAddress address = null;
+        InetAddress address = null;
         try {
             address = InetAddress.getByName(CHAT_SERVER_ADDRESS);
         } catch (UnknownHostException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Internet Address error: " + e.getMessage());
-        }*/
+        }
 
         HostnameVerifier verifier = new HostnameVerifier() {
             @Override
@@ -148,8 +152,8 @@ public class MyXMPP {
         configBuilder.setHost(CHAT_SERVER_ADDRESS);
         configBuilder.setXmppDomain(serviceName);
         configBuilder.setHostnameVerifier(verifier);
-        //configBuilder.setHostAddress(address);
-        configBuilder.setHost(CHAT_SERVER_ADDRESS);
+        configBuilder.setHostAddress(address);
+        //configBuilder.setHost(CHAT_SERVER_ADDRESS);
         configBuilder.setPort(CHAT_SERVER_PORT);
         connection = new XMPPTCPConnection(configBuilder.build());
         connection.addConnectionListener(connectionListener);
@@ -164,13 +168,13 @@ public class MyXMPP {
         configBuilder.setUsernameAndPassword(userName, passWord);
         configBuilder.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
 
-        /*InetAddress address = null;
+        InetAddress address = null;
         try {
             address = InetAddress.getByName(CHAT_SERVER_ADDRESS);
         } catch (UnknownHostException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Internet Address error: " + e.getMessage());
-        }*/
+        }
 
         HostnameVerifier verifier = new HostnameVerifier() {
             @Override
@@ -190,8 +194,8 @@ public class MyXMPP {
         configBuilder.setHost(CHAT_SERVER_ADDRESS);
         configBuilder.setXmppDomain(serviceName);
         configBuilder.setHostnameVerifier(verifier);
-        //configBuilder.setHostAddress(address);
-        configBuilder.setHost(CHAT_SERVER_ADDRESS);
+        configBuilder.setHostAddress(address);
+        //configBuilder.setHost(CHAT_SERVER_ADDRESS);
         configBuilder.setPort(CHAT_SERVER_PORT);
         connection = new XMPPTCPConnection(configBuilder.build());
         connection.addConnectionListener(connectionListener2);
@@ -401,8 +405,9 @@ public class MyXMPP {
         });
     }
 
-    public void getFriendList(){
+    public List<MyFriend> getFriendList(){
         Roster roster = Roster.getInstanceFor(connection);
+
         if (roster != null && !roster.isLoaded()) {
             try{
                 roster.reloadAndWait();
@@ -414,32 +419,14 @@ public class MyXMPP {
         }
 
         if (roster != null){
-            Collection<RosterEntry> entries = roster.getEntries();
-            Presence presence;
-            for(RosterEntry entry : entries) {
-                presence = roster.getPresence(entry.getJid());
-                Log.d("xmpp: ", "Friend list: id:: "+entry.getJid());
-                Log.d("xmpp: ", "Friend list: name:: "+entry.getName());
-                Log.d("xmpp: ", "Friend list: user:: "+entry.getUser());
-                Log.d("xmpp: ", "Friend list: type:: "+presence.getType().name());
-                Log.d("xmpp: ", "Friend list: status:: "+presence.getStatus());
-            }
+            getFriendList(roster);
         }
 
         roster.addRosterLoadedListener(new RosterLoadedListener() {
             @Override
             public void onRosterLoaded(Roster roster) {
                 if (roster != null){
-                    Collection<RosterEntry> entries = roster.getEntries();
-                    Presence presence;
-                    for(RosterEntry entry : entries) {
-                        presence = roster.getPresence(entry.getJid());
-                        Log.d("xmpp: ", "Friend list2: id:: "+entry.getJid());
-                        Log.d("xmpp: ", "Friend list2: name:: "+entry.getName());
-                        Log.d("xmpp: ", "Friend list2: user:: "+entry.getUser());
-                        Log.d("xmpp: ", "Friend list2: type:: "+presence.getType().name());
-                        Log.d("xmpp: ", "Friend list2: status:: "+presence.getStatus());
-                    }
+                    getFriendList(roster);
                 }
             }
 
@@ -448,6 +435,25 @@ public class MyXMPP {
                 Log.d("xmpp:::::::: ", "All User failed: " + e.getMessage());
             }
         });
+        return friendList;
+    }
+
+    List<MyFriend> friendList = new ArrayList<MyFriend>();
+
+    public List<MyFriend> getFriendList(Roster roster){
+        Collection<RosterEntry> entries = roster.getEntries();
+        Presence presence;
+        friendList.clear();
+        for(RosterEntry entry : entries) {
+            presence = roster.getPresence(entry.getJid());
+            MyFriend friend = new MyFriend();
+            friend.setjID(String.valueOf(entry.getJid()));
+            friend.setName(entry.getName());
+            friend.setStatus(presence.getType().name());
+            friend.setStatus(presence.getStatus());
+            friendList.add(friend);
+        }
+        return friendList;
     }
 
     // method for ping manager

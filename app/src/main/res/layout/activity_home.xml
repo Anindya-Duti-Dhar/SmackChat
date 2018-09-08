@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+        android:theme="@style/AppTheme.AppBarOverlay">
 
         <android.support.design.widget.CollapsingToolbarLayout
             android:id="@+id/collapsing_toolbar"
@@ -20,26 +20,42 @@
             app:contentScrim="?attr/colorPrimary"
             app:layout_scrollFlags="scroll|exitUntilCollapsed">
 
-            <android.support.v7.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:background="@color/pressed_blue"
-                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-                app:layout_collapseMode="pin"/>
+                <android.support.v7.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    android:background="#197bca"
+                    app:popupTheme="@style/AppTheme.PopupOverlay"
+                    app:layout_collapseMode="parallax"/>
+
+                <com.arlib.floatingsearchview.FloatingSearchView
+                    android:id="@+id/mSearchView"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    android:background="@color/md_white_1000"
+                    app:floatingSearch_searchBarMarginLeft="4dp"
+                    app:floatingSearch_searchBarMarginRight="4dp"
+                    app:floatingSearch_searchHint="Search Here"
+                    app:floatingSearch_dimBackground="false"
+                    app:floatingSearch_suggestionsListAnimDuration="250"
+                    app:floatingSearch_showSearchKey="false"
+                    app:floatingSearch_leftActionMode="showHamburger"
+                    app:floatingSearch_dismissOnOutsideTouch="true"
+                    app:floatingSearch_close_search_on_keyboard_dismiss="true"
+                    app:floatingSearch_menu="@menu/main_menu"/>
 
         </android.support.design.widget.CollapsingToolbarLayout>
 
         <android.support.design.widget.TabLayout
             android:id="@+id/tabs"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
+            android:layout_height="48dp"
             android:layout_gravity="bottom"
             android:layout_alignParentBottom="true"
             android:background="@color/md_white_1000"
-            app:elevation="5dp"
+            app:elevation="8dp"
             app:tabGravity="fill"
-            app:tabIndicatorColor="@color/md_grey_500"
+            app:tabIndicatorColor="#197bca"
             app:tabIndicatorHeight="2dp"
             app:tabMode="fixed"/>
 

@@ -16,11 +16,11 @@ public class BootCompletedIntentReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         if ("android.intent.action.BOOT_COMPLETED".equals(intent.getAction())) {
             Log.d("xmpp", "Boot completed");
-            Intent pushIntent = new Intent(context, ConnectXmpp.class);
+            /*Intent pushIntent = new Intent(context, ConnectXmpp.class);
             pushIntent.putExtra("user", PrefManager.getUserName(context));
             pushIntent.putExtra("pwd", PrefManager.getUserPassword(context));
             pushIntent.putExtra("code", "122");
-            context.startService(pushIntent);
+            context.startService(pushIntent);*/
         }
     }
 }

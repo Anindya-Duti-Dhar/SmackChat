@@ -7,7 +7,7 @@
     android:id="@+id/login_main_content"
     android:layout_height="match_parent"
     android:background="@drawable/dark"
-    tools:context=".activities.Login">
+    tools:context=".activities.LoginActivity">
 
     <android.support.v7.widget.Toolbar xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/login_toolbar"

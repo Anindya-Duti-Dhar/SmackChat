@@ -26,9 +26,15 @@
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-        <item name="colorPrimaryDark">@color/contact_profile_darkBlue</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="android:popupMenuStyle">@style/PopupMenu</item>
-        <item name="colorControlNormal">@color/white_transparent</item>
+        <item name="colorControlNormal">@android:color/white</item>
+        <item name="android:windowDisablePreview">true</item>
+    </style>
+
+    <style name="TextLabel" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Label color in TRUE state and bar color FALSE and TRUE State -->
+        <item name="colorControlActivated">#FFCC00</item>
     </style>
 
     <style name="CollapsingToolbarLayoutExpandedTextStyle" parent="AppTheme">
@@ -43,7 +49,7 @@
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
-    <item name="colorControlNormal">@color/white_transparent</item>
+        <item name="colorControlNormal">@android:color/white</item>
     </style>
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 

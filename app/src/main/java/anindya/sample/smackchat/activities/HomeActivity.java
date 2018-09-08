@@ -7,40 +7,50 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import anindya.sample.smackchat.R;
 import anindya.sample.smackchat.fragments.FriendsFragment;
 
-/**
- * Created by dev.pool2 on 9/6/2018.
- */
-
-public class HomeActivity extends AppCompatActivity {
+public class HomeActivity extends BaseActivity {
 
     //Defining Variables
     private TabLayout tabLayout;
     private ViewPager viewPager;
+    public Toolbar mToolbar;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        // Set up the toolbar with actionbar title
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
+        setActionBarTitle("Hi Friends");
 
         // initialize tab layout with tab icon
         tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.chat_tab_selector));
-        tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.chat_tab_selector));
-        tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.chat_tab_selector));
+        tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.friends_tab_selector));
+        tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.users_tab_selector));
+        tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.group_tab_selector));
+        tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.profile_tab_selector));
+
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
         // initialize view pager
         viewPager = (ViewPager) findViewById(R.id.viewpager);
         // for smooth transition between tabs
-        viewPager.setOffscreenPageLimit(3);
+        viewPager.setOffscreenPageLimit(5);
         // initialize view pager adapter and setting that adapter
         final PagerAdapter adapter = new PageAdapter(getSupportFragmentManager(), tabLayout.getTabCount());
         viewPager.setAdapter(adapter);
+
+        // bind home tab as default tab when launch home fragment
+        viewPager.setCurrentItem(2);
 
         // add tab layout listener into view pager listener
         viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
@@ -94,6 +104,16 @@ public class HomeActivity extends AppCompatActivity {
                     // Set title bar
                    // ((MainActivity) getActivity()).setActionBarTitle(getActivity().getString(R.string.profile_toolbar));
                 }
+                if (position == 3) {
+                    // do something when view pager appeared
+                    // Set title bar
+                    // ((MainActivity) getActivity()).setActionBarTitle(getActivity().getString(R.string.profile_toolbar));
+                }
+                if (position == 4) {
+                    // do something when view pager appeared
+                    // Set title bar
+                    // ((MainActivity) getActivity()).setActionBarTitle(getActivity().getString(R.string.profile_toolbar));
+                }
             }
 
             @Override
@@ -124,6 +144,12 @@ public class HomeActivity extends AppCompatActivity {
                 case 2:
                     FriendsFragment FragmentC = new FriendsFragment();
                     return FragmentC;
+                case 3:
+                    FriendsFragment FragmentD = new FriendsFragment();
+                    return FragmentD;
+                case 4:
+                    FriendsFragment FragmentE = new FriendsFragment();
+                    return FragmentE;
                 default:
                     return null;
             }
@@ -133,6 +159,29 @@ public class HomeActivity extends AppCompatActivity {
         public int getCount() {
             return mNumOfTabs;
         }
+    }
+
+    // Set up the toolbar title
+    public void setActionBarTitle(String title) {
+        getSupportActionBar().setTitle(title);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_notification:
+
+                break;
+            default:
+                break;
+        }
+        return true;
     }
 
 }

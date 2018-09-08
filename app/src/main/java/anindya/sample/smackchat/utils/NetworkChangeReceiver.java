@@ -14,19 +14,17 @@ import anindya.sample.smackchat.services.ConnectXmpp;
 
 public class NetworkChangeReceiver extends BroadcastReceiver {
 
-    private boolean internetConnected=true;
 
     @Override
     public void onReceive(Context context, Intent intent) {
         String status = NetworkChecking.getConnectivityStatusString(context);
         if(status.equalsIgnoreCase("Wifi enabled")||status.equalsIgnoreCase("Mobile data enabled")){
             Log.d("xmpp: ", "connectivity:: "+status);
-            internetConnected=true;
-            Intent pushIntent = new Intent(context, ConnectXmpp.class);
+            /*Intent pushIntent = new Intent(context, ConnectXmpp.class);
             pushIntent.putExtra("user", PrefManager.getUserName(context));
             pushIntent.putExtra("pwd", PrefManager.getUserPassword(context));
             pushIntent.putExtra("code", "122");
-            context.startService(pushIntent);
+            context.startService(pushIntent);*/
         }
         Toast.makeText(context, status, Toast.LENGTH_LONG).show();
     }
