@@ -17,6 +17,7 @@ import org.greenrobot.eventbus.Subscribe;
 
 import anindya.sample.smackchat.R;
 import anindya.sample.smackchat.fragments.FriendsFragment;
+import anindya.sample.smackchat.fragments.UserFragment;
 import anindya.sample.smackchat.model.BroadcastEvent;
 import anindya.sample.smackchat.services.XmppService;
 import base.droidtool.activities.BaseActivity;
@@ -24,15 +25,15 @@ import base.droidtool.activities.BaseActivity;
 public class HomeActivity extends BaseActivity {
 
     //Defining Variables
-    private TabLayout tabLayout;
-    private ViewPager viewPager;
+    public TabLayout tabLayout;
+    public ViewPager viewPager;
 
     @Override
     public void onStart() {
         super.onStart();
         Intent mIntent = new Intent(this, XmppService.class);
         bindService(mIntent, mConnection, BIND_AUTO_CREATE);
-        EventBus.getDefault().register(this);
+        if(!EventBus.getDefault().isRegistered(this))EventBus.getDefault().register(this);
     }
 
     @Override
@@ -41,7 +42,7 @@ public class HomeActivity extends BaseActivity {
             unbindService(mConnection);
             mBounded = false;
         }
-        EventBus.getDefault().unregister(this);
+        if(EventBus.getDefault().isRegistered(this))EventBus.getDefault().unregister(this);
         super.onDestroy();
     }
 
@@ -59,7 +60,7 @@ public class HomeActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        super.register(this, R.string.app_name);
+        super.register(this, 0);
         super.setStatusBarColor(getResources().getColor(R.color.contact_profile_darkBlue));
         super.initProgressDialog(getString(R.string.getting_ready));
 
@@ -134,7 +135,7 @@ public class HomeActivity extends BaseActivity {
                 if (position == 2) {
                     // do something when view pager appeared
                     // Set title bar
-                   // ((MainActivity) getActivity()).setActionBarTitle(getActivity().getString(R.string.profile_toolbar));
+                    //setActionBarTitle(getString(R.string.profile_toolbar));
                 }
                 if (position == 3) {
                     // do something when view pager appeared
@@ -174,7 +175,7 @@ public class HomeActivity extends BaseActivity {
                     FriendsFragment FragmentB = new FriendsFragment();
                     return FragmentB;
                 case 2:
-                    FriendsFragment FragmentC = new FriendsFragment();
+                    UserFragment FragmentC = new UserFragment();
                     return FragmentC;
                 case 3:
                     FriendsFragment FragmentD = new FriendsFragment();

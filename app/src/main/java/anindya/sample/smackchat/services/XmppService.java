@@ -15,6 +15,7 @@ import org.jivesoftware.smack.XMPPConnection;
 import java.util.List;
 
 import anindya.sample.smackchat.model.MyFriend;
+import anindya.sample.smackchat.model.Users;
 import anindya.sample.smackchat.utils.LocalBinder;
 import anindya.sample.smackchat.utils.XmppManager;
 

@@ -49,6 +49,7 @@ import anindya.sample.smackchat.R;
 import anindya.sample.smackchat.model.BroadcastEvent;
 import anindya.sample.smackchat.model.ChatEvent;
 import anindya.sample.smackchat.model.MyFriend;
+import anindya.sample.smackchat.model.Users;
 
 import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_ADDRESS;
 import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_PORT;

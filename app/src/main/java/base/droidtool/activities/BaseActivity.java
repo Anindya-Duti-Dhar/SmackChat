@@ -1,7 +1,6 @@
 package base.droidtool.activities;
 
 import android.app.ProgressDialog;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.ServiceConnection;
@@ -26,15 +25,12 @@ import base.droidtool.dtlib.ExceptionHandler;
 
 public abstract class BaseActivity extends AppCompatActivity {
 
-    protected Context mContext;
-    protected DroidTool dt;
-    protected ProgressDialog mProgressDialog;
-
-    protected BroadcastReceiver mBroadcastReceiver;
-
-    protected XmppService mService;
-    protected boolean mBounded;
-    protected final ServiceConnection mConnection = new ServiceConnection() {
+    public Context mContext;
+    public DroidTool dt;
+    public ProgressDialog mProgressDialog;
+    public XmppService mService;
+    public boolean mBounded;
+    public ServiceConnection mConnection = new ServiceConnection() {
 
         @SuppressWarnings("unchecked")
         @Override
