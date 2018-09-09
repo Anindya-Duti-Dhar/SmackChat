@@ -2,15 +2,11 @@ package anindya.sample.smackchat.activities;
 
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -29,44 +25,21 @@ import anindya.sample.smackchat.adapter.ChatAdapter;
 import anindya.sample.smackchat.model.ChatEvent;
 import anindya.sample.smackchat.model.ChatItem;
 import anindya.sample.smackchat.services.ConnectXmpp;
-import anindya.sample.smackchat.utils.LocalBinder;
-import anindya.sample.smackchat.utils.PrefManager;
+import base.droidtool.activities.BaseActivity;
 
 
-public class Chat extends AppCompatActivity {
-    // list inflating variable
+public class Chat extends BaseActivity {
+
     ArrayList<ChatItem> chatItem;
     RecyclerView mRecyclerView;
     ChatAdapter adapter;
     String userName;
     String mChat;
     LinearLayoutManager mLinearLayoutManager;
-
-    private ConnectXmpp mService;
-    private boolean mBounded;
     ChatItem chatListObject;
 
     private BroadcastReceiver mBroadcastReceiver;
     private ProgressDialog mProgressDialog;
-
-    private final ServiceConnection mConnection = new ServiceConnection() {
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void onServiceConnected(final ComponentName name,
-                                       final IBinder service) {
-            mService = ((LocalBinder<ConnectXmpp>) service).getService();
-            mBounded = true;
-            Log.d("xmpp:", "onServiceConnected");
-        }
-
-        @Override
-        public void onServiceDisconnected(final ComponentName name) {
-            mService = null;
-            mBounded = false;
-            Log.d("xmpp:", "onServiceDisconnected");
-        }
-    };
 
     @Subscribe
     public void onMessageEvent(ChatEvent event) {
@@ -137,10 +110,13 @@ public class Chat extends AppCompatActivity {
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d("xmpp", "onCreate");
         setContentView(R.layout.chat);
+        super.register(this, R.string.app_name);
+        super.setStatusBarColor(getResources().getColor(R.color.contact_profile_darkBlue));
+        super.initProgressDialog(getString(R.string.getting_ready));
 
         // keep device screen on
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -148,19 +124,14 @@ public class Chat extends AppCompatActivity {
         // keyboard adjustment
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
-        userName = PrefManager.getUserName(Chat.this);
-
-        mProgressDialog = new ProgressDialog(this);
-        mProgressDialog.setMessage("Loading Chat Data........");
-        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        mProgressDialog.setCancelable(false);
+        userName = dt.pref.getString("username");
 
         // initialization of streams list
         chatItem = new ArrayList<ChatItem>();
         // set the recycler view to inflate the list
         mRecyclerView = (RecyclerView) findViewById(R.id.chat_list);
         mLinearLayoutManager = new LinearLayoutManager(getApplicationContext());
-        adapter = new ChatAdapter(getApplicationContext(), chatItem);
+        adapter = new ChatAdapter(dt, getApplicationContext(), chatItem);
 
         joinChatRoom();
 

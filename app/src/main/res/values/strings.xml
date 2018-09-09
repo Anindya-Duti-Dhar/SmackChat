@@ -8,8 +8,6 @@
     <string name="login_error_dialog_message">Want to try again?</string>
 
     <!--Login Screen start-->
-    <string name="yes">Yes</string>
-    <string name="no">No</string>
     <string name="sign_up_dialog_message">Enjoy Hangout!</string>
     <string name="login_failed_message">Authentication failed</string>
     <string name="valid_password">3 to 32 alphanumeric characters</string>
@@ -38,4 +36,28 @@
     <string name="next">NEXT</string>
     <string name="register">REGISTER</string>
 
+    <!--Droid Tool-->
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="ok">Ok</string>
+    <string name="delete">Delete</string>
+    <string name="common_warning_title">Attention!</string>
+    <string name="no_internet_title">Network Error!</string>
+    <string name="no_internet_message">Please Enable Internet Connection</string>
+    <string name="select">Select</string>
+    <string name="cancel">Cancel</string>
+    <string name="year">Year</string>
+    <string name="month">Month</string>
+    <string name="day">Day</string>
+    <string name="gps_track_failed">Wait till getting correct location</string>
+    <string name="no_gps_title">Location Service Error!</string>
+    <string name="no_gps_message">Please Enable Location Service</string>
+    <string name="no_location">No Location Provider is Available</string>
+    <string name="permission_failed">Your Permission getting failed!</string>
+    <string name="permission_message_twice">To allow permission please go to device settings page</string>
+    <string name="language_settings">Language Settings</string>
+    <string name="already_synced">Already data has synced with server</string>
+    <string name="want_to_delete">Want to delete information</string>
+    <string name="sorry">Sorry!</string>
+    <string name="crash_message">Application has faced temporary Error</string>
 </resources>

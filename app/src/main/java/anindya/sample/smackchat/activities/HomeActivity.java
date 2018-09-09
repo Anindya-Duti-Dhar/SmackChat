@@ -1,5 +1,6 @@
 package anindya.sample.smackchat.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -7,29 +8,60 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+
 import anindya.sample.smackchat.R;
 import anindya.sample.smackchat.fragments.FriendsFragment;
+import anindya.sample.smackchat.model.BroadcastEvent;
+import anindya.sample.smackchat.services.XmppService;
+import base.droidtool.activities.BaseActivity;
 
 public class HomeActivity extends BaseActivity {
 
     //Defining Variables
     private TabLayout tabLayout;
     private ViewPager viewPager;
-    public Toolbar mToolbar;
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Intent mIntent = new Intent(this, XmppService.class);
+        bindService(mIntent, mConnection, BIND_AUTO_CREATE);
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    public void onDestroy() {
+        if (mBounded) {
+            unbindService(mConnection);
+            mBounded = false;
+        }
+        EventBus.getDefault().unregister(this);
+        super.onDestroy();
+    }
+
+    @Subscribe
+    public void onMessageEvent(BroadcastEvent event) {
+        Log.d("xmpp: ", "BroadcastEvent: " + event.item + "\nCategory: " + event.category + "\nMessage: " + event.message);
+        if(event.item.equals("login")){
+            mService.setUpReceiver();
+            dt.tools.startActivity(HomeActivity.class, "");
+        }
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        // Set up the toolbar with actionbar title
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(mToolbar);
-        setActionBarTitle("Hi Friends");
+        super.register(this, R.string.app_name);
+        super.setStatusBarColor(getResources().getColor(R.color.contact_profile_darkBlue));
+        super.initProgressDialog(getString(R.string.getting_ready));
 
         // initialize tab layout with tab icon
         tabLayout = (TabLayout) findViewById(R.id.tabs);
@@ -184,4 +216,8 @@ public class HomeActivity extends BaseActivity {
         return true;
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+    }
 }

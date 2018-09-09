@@ -1,26 +1,22 @@
 package anindya.sample.smackchat.activities;
 
 import android.app.ActivityOptions;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.ActivityOptionsCompat;
-import android.support.v4.content.LocalBroadcastManager;
-import android.transition.Explode;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 import org.jivesoftware.smack.XMPPConnection;
 
 import anindya.sample.smackchat.R;
+import anindya.sample.smackchat.model.BroadcastEvent;
 import anindya.sample.smackchat.services.XmppService;
-import anindya.sample.smackchat.utils.NetworkChecking;
-import anindya.sample.smackchat.utils.PrefManager;
+import base.droidtool.activities.BaseActivity;
 
 
 public class LoginActivity extends BaseActivity {
@@ -34,64 +30,59 @@ public class LoginActivity extends BaseActivity {
     private Button btGo;
     private FloatingActionButton fab;
 
-
-
     @Override
     public void onStart() {
         super.onStart();
         Intent mIntent = new Intent(this, XmppService.class);
         bindService(mIntent, mConnection, BIND_AUTO_CREATE);
-        LocalBroadcastManager.getInstance(LoginActivity.this).registerReceiver(mBroadcastReceiver, new IntentFilter("login"));
+        EventBus.getDefault().register(this);
     }
 
     @Override
-    public void onStop() {
+    public void onDestroy() {
         if (mBounded) {
             unbindService(mConnection);
             mBounded = false;
         }
-        LocalBroadcastManager.getInstance(LoginActivity.this).unregisterReceiver(mBroadcastReceiver);
-        super.onStop();
+        EventBus.getDefault().unregister(this);
+        super.onDestroy();
     }
 
     @Override
-    protected void onRestart() {
+    public void onRestart() {
         super.onRestart();
         fab.setVisibility(View.GONE);
     }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         fab.setVisibility(View.VISIBLE);
+    }
+
+    @Subscribe
+    public void onMessageEvent(BroadcastEvent event) {
+        Log.d("xmpp: ", "BroadcastEvent: " + event.item + "\nCategory: " + event.category + "\nMessage: " + event.message);
+        if(event.item.equals("login")){
+            mService.setUpReceiver();
+            dt.pref.set("login", true);
+            dt.pref.set("username", userName.toLowerCase());
+            dt.pref.set("password", password);
+            hideDialog();
+            dt.tools.startActivity(HomeActivity.class, "");
+        }
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        mContext = this;
+        super.register(this, 0);
         super.setStatusBarColor(getResources().getColor(R.color.contact_profile_darkBlue));
         super.initProgressDialog(getString(R.string.getting_ready));
 
         initView();
         setListener();
-
-        mBroadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                // checking for type intent filter
-                if (intent.getAction().equals("login")) {
-                    mService.setUpReceiver();
-                    PrefManager.setUserLoggedData(LoginActivity.this, "Yes");
-                    PrefManager.setUserName(LoginActivity.this, userName.toLowerCase());
-                    PrefManager.setUserPassword(LoginActivity.this, password);
-                    hideDialog();
-                    startHomeActivity();
-                }
-            }
-        };
-
     }
 
     private void initView() {
@@ -107,11 +98,11 @@ public class LoginActivity extends BaseActivity {
             @Override
             public void onClick(View view) {
                 showDialog();
-                if (NetworkChecking.hasConnection(mContext)) {
+                if (dt.droidNet.hasConnection()) {
                     login();
                 } else {
                     hideDialog();
-                    toast("No Internet");
+                    dt.droidNet.internetErrorDialog();
                 }
             }
         });
@@ -134,17 +125,6 @@ public class LoginActivity extends BaseActivity {
         }
         getUserInfo();
         xmppLogin();
-    }
-
-    private void startHomeActivity() {
-        Explode explode = new Explode();
-        explode.setDuration(500);
-        getWindow().setExitTransition(explode);
-        getWindow().setEnterTransition(explode);
-        ActivityOptionsCompat oc2 = ActivityOptionsCompat.makeSceneTransitionAnimation(LoginActivity.this);
-        Intent i2 = new Intent(LoginActivity.this, HomeActivity.class);
-        startActivity(i2, oc2.toBundle());
-        finish();
     }
 
     public void onLoginFailed() {
@@ -210,15 +190,25 @@ public class LoginActivity extends BaseActivity {
             try {
                 mService.initConnection(userName, password, new XmppService.onConnectionResponse() {
                     @Override
-                    public void onConnected(XMPPConnection connection) {
-                        if(!connection.isAuthenticated()){
+                    public void onConnected(boolean isConnected, XMPPConnection connection) {
+                        if(isConnected){
                             mService.login(userName, password, new XmppService.onLoginResponse() {
                                 @Override
                                 public void onLoggedIn(boolean isLogged) {
                                     if(!isLogged) onLoginFailed();
                                 }
                             });
-                        }
+                        } else onLoginFailed();
+                       /* if(connection!=null){
+                            if(!connection.isAuthenticated()){
+                                mService.login(userName, password, new XmppService.onLoginResponse() {
+                                    @Override
+                                    public void onLoggedIn(boolean isLogged) {
+                                        if(!isLogged) onLoginFailed();
+                                    }
+                                });
+                            }
+                        } else onLoginFailed();*/
                     }
                 });
                 mService.connectConnection();

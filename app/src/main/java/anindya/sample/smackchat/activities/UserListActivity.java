@@ -17,8 +17,9 @@ import anindya.sample.smackchat.R;
 import anindya.sample.smackchat.adapter.UserListAdapter;
 import anindya.sample.smackchat.model.Users;
 import anindya.sample.smackchat.utils.MyXMPP;
+import base.droidtool.activities.BaseActivity;
 
-public class UserListActivity extends AppCompatActivity {
+public class UserListActivity extends BaseActivity {
 
     List<Users> userListArrayList = new ArrayList<Users>();
     RecyclerView mRecyclerView;
@@ -29,9 +30,12 @@ public class UserListActivity extends AppCompatActivity {
     boolean isLoading = false;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_list);
+        super.register(this, 0);
+        super.setStatusBarColor(getResources().getColor(R.color.contact_profile_darkBlue));
+        super.initProgressDialog(getString(R.string.getting_ready));
 
         mRecyclerView = (RecyclerView) findViewById(R.id.user_list);
         mLoadingProgress = (RelativeLayout) findViewById(R.id.loading_progress);
@@ -60,7 +64,7 @@ public class UserListActivity extends AppCompatActivity {
                 if(users!=null){
                     userListArrayList.clear();
                     userListArrayList = users;
-                    adapter = new UserListAdapter(UserListActivity.this, userListArrayList);
+                    adapter = new UserListAdapter(dt, UserListActivity.this, userListArrayList);
                     mRecyclerView.setAdapter(adapter);
                 }
             }

@@ -13,7 +13,7 @@ import java.util.List;
 
 import anindya.sample.smackchat.R;
 import anindya.sample.smackchat.model.Users;
-import anindya.sample.smackchat.utils.PrefManager;
+import base.droidtool.DroidTool;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHolder> {
@@ -35,13 +35,15 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
 
     private List<Users> _data;
     private Context mContext;
+    private DroidTool dt;
 
-    public UserListAdapter(Context context, List<Users> _data) {
+    public UserListAdapter(DroidTool droidTool, Context context, List<Users> _data) {
         this._data = _data;
         this.mContext = context;
+        dt = droidTool;
         for (int i = 0; i < _data.size(); i++) {
             Users val = _data.get(i);
-            if ((val.getUsername().equals(PrefManager.getUserName(context)))) {
+            if ((val.getUsername().equals(dt.pref.getString("username")))) {
                 _data.remove(i);
             }
         }

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 
 import anindya.sample.smackchat.R;
 import anindya.sample.smackchat.model.ChatItem;
-import anindya.sample.smackchat.utils.PrefManager;
+import base.droidtool.DroidTool;
 
 
 public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
@@ -35,15 +35,17 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
 
     private ArrayList<ChatItem> _data;
     private Context mContext;
+    private DroidTool dt;
 
     // Easy access to the context object in the recyclerview
     private Context getContext() {
         return mContext;
     }
 
-    public ChatAdapter(Context context, ArrayList<ChatItem> _data) {
+    public ChatAdapter(DroidTool droidTool, Context context, ArrayList<ChatItem> _data) {
         this._data = _data;
         mContext = context;
+        dt = droidTool;
     }
 
     @Override
@@ -61,7 +63,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
         final ChatItem data = _data.get(position);
         LinearLayout FriendChat = viewHolder.friend_chat;
         LinearLayout MyChat = viewHolder.my_chat;
-        if(data.getChatUserName().equals(PrefManager.getUserName(mContext))){
+        if(data.getChatUserName().equals(dt.pref.getString("username"))){
             FriendChat.setVisibility(View.GONE);
             MyChat.setVisibility(View.VISIBLE);
 

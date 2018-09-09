@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
+import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.XMPPConnection;
 
 import java.util.List;
@@ -54,7 +55,7 @@ public class XmppService extends Service {
     }
 
     public interface onConnectionResponse {
-        void onConnected(XMPPConnection connection);
+        void onConnected(boolean isConnected, XMPPConnection connection);
     }
 
     public void initConnection(String username, String password, onConnectionResponse listener){
@@ -63,11 +64,15 @@ public class XmppService extends Service {
         passWord = password;
         xmppManager.setConnectionResponseListener(new XmppManager.onConnectionResponse() {
             @Override
-            public void onConnected(XMPPConnection connection) {
-                if(connectionResponse!=null)connectionResponse.onConnected(connection);
+            public void onConnected(boolean isConnected, XMPPConnection connection) {
+                if(connectionResponse!=null)connectionResponse.onConnected(isConnected, connection);
             }
         });
         xmppManager.initConnectionBuilder(userName, passWord);
+    }
+
+    public AbstractXMPPConnection getConnection(){
+        return xmppManager.connection;
     }
 
     public interface onRegistrationResponse {

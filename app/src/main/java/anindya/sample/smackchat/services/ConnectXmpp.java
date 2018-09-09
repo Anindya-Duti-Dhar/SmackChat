@@ -13,7 +13,7 @@ import org.jivesoftware.smack.packet.Presence;
 
 import anindya.sample.smackchat.utils.LocalBinder;
 import anindya.sample.smackchat.utils.MyXMPP;
-import anindya.sample.smackchat.utils.PrefManager;
+import base.droidtool.DroidTool;
 
 import static anindya.sample.smackchat.utils.Const.CHAT_DEMO_OPPONENT_NAME;
 import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_SERVICE_NAME;
@@ -133,9 +133,10 @@ public class ConnectXmpp extends Service {
         // disconnect user
         xmpp.disconnectConnection();
         // re launch service
+        DroidTool dt = new DroidTool(this);
         Intent intent = new Intent(getApplicationContext(), ConnectXmpp.class);
-        intent.putExtra("user", PrefManager.getUserName(context));
-        intent.putExtra("pwd", PrefManager.getUserPassword(context));
+        intent.putExtra("user", dt.pref.getString("username"));
+        intent.putExtra("pwd", dt.pref.getString("password"));
         intent.putExtra("code", "122");
         PendingIntent service = PendingIntent.getService(
                 getApplicationContext(),

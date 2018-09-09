@@ -7,6 +7,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import anindya.sample.smackchat.services.ConnectXmpp;
+import base.droidtool.DroidTool;
 
 /**
  * Created by Duti on 8/31/2018.
@@ -14,10 +15,12 @@ import anindya.sample.smackchat.services.ConnectXmpp;
 
 public class NetworkChangeReceiver extends BroadcastReceiver {
 
+    DroidTool dt;
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        String status = NetworkChecking.getConnectivityStatusString(context);
+        dt = new DroidTool(context);
+        String status = dt.droidNet.getConnectivityStatusString();
         if(status.equalsIgnoreCase("Wifi enabled")||status.equalsIgnoreCase("Mobile data enabled")){
             Log.d("xmpp: ", "connectivity:: "+status);
             /*Intent pushIntent = new Intent(context, ConnectXmpp.class);
@@ -26,6 +29,6 @@ public class NetworkChangeReceiver extends BroadcastReceiver {
             pushIntent.putExtra("code", "122");
             context.startService(pushIntent);*/
         }
-        Toast.makeText(context, status, Toast.LENGTH_LONG).show();
+        dt.msg(status);
     }
 }

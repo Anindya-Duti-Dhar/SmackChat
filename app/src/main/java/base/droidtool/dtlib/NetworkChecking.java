@@ -1,18 +1,28 @@
-package anindya.sample.smackchat.utils;
+package base.droidtool.dtlib;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import anindya.sample.smackchat.R;
+import base.droidtool.DroidTool;
+
+
 public class NetworkChecking {
+
+    DroidTool dt;
 
     public static int TYPE_WIFI = 1;
     public static int TYPE_MOBILE = 2;
     public static int TYPE_NOT_CONNECTED = 0;
 
+    public NetworkChecking(DroidTool droidTool) {
+        dt = droidTool;
+    }
+
     // Internet check method
-    public static boolean hasConnection(Context context) {
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    public boolean hasConnection() {
+        ConnectivityManager cm = (ConnectivityManager) dt.c.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo wifiNetwork = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
         if (wifiNetwork != null && wifiNetwork.isConnected()) {
             return true;
@@ -29,8 +39,8 @@ public class NetworkChecking {
     }
 
     // get connectivity status at run time
-    public static int getConnectivityStatus(Context context) {
-        ConnectivityManager cm = (ConnectivityManager) context
+    public int getConnectivityStatus() {
+        ConnectivityManager cm = (ConnectivityManager) dt.c
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         if (null != activeNetwork) {
@@ -44,8 +54,8 @@ public class NetworkChecking {
     }
 
     // convert connectivity status into string
-    public static String getConnectivityStatusString(Context context) {
-        int conn = getConnectivityStatus(context);
+    public String getConnectivityStatusString() {
+        int conn = getConnectivityStatus();
         String status = null;
         if (conn == TYPE_WIFI) {
             status = "Wifi enabled";
@@ -56,4 +66,11 @@ public class NetworkChecking {
         }
         return status;
     }
+
+    // Internet error dialog method
+    public void internetErrorDialog() {
+        // if there is no internet
+        dt.alert.showError(dt.gStr(R.string.no_internet_title), dt.gStr(R.string.no_internet_message), dt.gStr(R.string.ok));
+    }
+
 }

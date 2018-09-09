@@ -46,6 +46,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 
 import anindya.sample.smackchat.R;
+import anindya.sample.smackchat.model.BroadcastEvent;
 import anindya.sample.smackchat.model.ChatEvent;
 import anindya.sample.smackchat.model.MyFriend;
 
@@ -95,7 +96,7 @@ public class XmppManager {
     public onConnectionResponse connectionResponse = null;
 
     public interface onConnectionResponse {
-        void onConnected(XMPPConnection connection);
+        void onConnected(boolean isConnected, XMPPConnection connection);
     }
 
     public void setConnectionResponseListener(onConnectionResponse listener) {
@@ -173,21 +174,21 @@ public class XmppManager {
                     } catch (SmackException e) {
                         e.printStackTrace();
                         Log.d("xmpp: ", "Connection Error: " + e.getMessage());
-                        if(connectionResponse!=null)connectionResponse.onConnected(null);
+                        if(connectionResponse!=null)connectionResponse.onConnected(false, null);
                     } catch (IOException e) {
                         e.printStackTrace();
                         Log.d("xmpp: ", "Connection Error: " + e.getMessage());
-                        if(connectionResponse!=null)connectionResponse.onConnected(null);
+                        if(connectionResponse!=null)connectionResponse.onConnected(false, null);
                     } catch (XMPPException e) {
                         e.printStackTrace();
                         Log.d("xmpp: ", "Connection Error: " + e.getMessage());
-                        if(connectionResponse!=null)connectionResponse.onConnected(null);
+                        if(connectionResponse!=null)connectionResponse.onConnected(false, null);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                         Log.d("xmpp: ", "Connection Error: " + e.getMessage());
-                        if(connectionResponse!=null)connectionResponse.onConnected(null);
+                        if(connectionResponse!=null)connectionResponse.onConnected(false, null);
                     }
-                }
+                } else if(connectionResponse!=null)connectionResponse.onConnected(true, listenerConnection);
                 return null;
             }
         };
@@ -283,8 +284,7 @@ public class XmppManager {
             presence.setStatus("I am Available from Now");
             connection.sendStanza(presence);
             Log.d("xmpp: ", "Login Requested");
-            //if(loginResponse!=null)loginResponse.onLoggedIn(true);
-            sendBroadCast("login", "success");
+            EventBus.getDefault().postSticky(new BroadcastEvent("login", "", "done"));
         } catch (XMPPException | SmackException | IOException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Login Failure: " + e.getMessage());
@@ -344,25 +344,28 @@ public class XmppManager {
         if(friendLoadResponse!=null)friendLoadResponse.onLoaded(friendList);
     }
 
+    public XMPPConnection listenerConnection = null;
+
     // Connection Listener to check connection state
     public class XMPPConnectionListener implements ConnectionListener {
 
         @Override
         public void connected(final XMPPConnection connection) {
             Log.d("xmpp: ", "Connected!");
-            if(connectionResponse!=null)connectionResponse.onConnected(connection);
+            listenerConnection = connection;
+            if(connectionResponse!=null)connectionResponse.onConnected(true, connection);
         }
 
         @Override
         public void connectionClosed() {
             Log.d("xmpp: ", "ConnectionCLosed!");
-            if(connectionResponse!=null)connectionResponse.onConnected(null);
+            if(connectionResponse!=null)connectionResponse.onConnected(false, null);
         }
 
         @Override
         public void connectionClosedOnError(Exception arg0) {
             Log.d("xmpp: ", "ConnectionClosedOn Error: "+arg0.getMessage());
-            if(connectionResponse!=null)connectionResponse.onConnected(null);
+            if(connectionResponse!=null)connectionResponse.onConnected(false, null);
         }
 
         @Override
@@ -435,11 +438,5 @@ public class XmppManager {
 
     public void toast(String msg){
         Toast.makeText(mContext, msg, Toast.LENGTH_SHORT).show();
-    }
-
-    public void sendBroadCast(String type, String message) {
-        Intent broadCastIntent = new Intent(type);
-        broadCastIntent.putExtra("action", message);
-        LocalBroadcastManager.getInstance(mContext).sendBroadcast(broadCastIntent);
     }
 }

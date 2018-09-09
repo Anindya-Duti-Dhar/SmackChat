@@ -21,12 +21,14 @@ import android.view.animation.AccelerateInterpolator;
 import android.widget.Button;
 import android.widget.EditText;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 import org.jivesoftware.smack.XMPPConnection;
 
 import anindya.sample.smackchat.R;
+import anindya.sample.smackchat.model.BroadcastEvent;
 import anindya.sample.smackchat.services.XmppService;
-import anindya.sample.smackchat.utils.NetworkChecking;
-import anindya.sample.smackchat.utils.PrefManager;
+import base.droidtool.activities.BaseActivity;
 
 
 public class RegisterActivity extends BaseActivity {
@@ -48,52 +50,49 @@ public class RegisterActivity extends BaseActivity {
         super.onStart();
         Intent mIntent = new Intent(this, XmppService.class);
         bindService(mIntent, mConnection, BIND_AUTO_CREATE);
-        LocalBroadcastManager.getInstance(RegisterActivity.this).registerReceiver(mBroadcastReceiver, new IntentFilter("login"));
+        EventBus.getDefault().register(this);
     }
 
     @Override
-    public void onStop() {
+    public void onDestroy() {
         if (mBounded) {
             unbindService(mConnection);
             mBounded = false;
         }
-        LocalBroadcastManager.getInstance(RegisterActivity.this).unregisterReceiver(mBroadcastReceiver);
-        super.onStop();
+        EventBus.getDefault().unregister(this);
+        super.onDestroy();
+    }
+
+    @Subscribe
+    public void onMessageEvent(BroadcastEvent event) {
+        Log.d("xmpp: ", "BroadcastEvent: " + event.item + "\nCategory: " + event.category + "\nMessage: " + event.message);
+        if(event.item.equals("login")){
+            mService.setUpReceiver();
+            dt.pref.set("login", true);
+            dt.pref.set("username", userName.toLowerCase());
+            dt.pref.set("password", password);
+            mService.setProfileInfo(userName, email, new XmppService.onProfileSetupResponse() {
+                @Override
+                public void onProfileSetup(boolean isSetup) {
+                    hideDialog();
+                    if (!isSetup) toast("Profile Info Setup Error");
+                    dt.tools.startActivity(HomeActivity.class, "");
+                }
+            });
+        }
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
-        mContext = this;
+        super.register(this, 0);
         super.setStatusBarColor(getResources().getColor(R.color.contact_profile_darkBlue));
         super.initProgressDialog(getString(R.string.getting_ready));
 
         ShowEnterAnimation();
         initView();
         setListener();
-
-        mBroadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                // checking for type intent filter
-                if (intent.getAction().equals("login")) {
-                    mService.setUpReceiver();
-                    PrefManager.setUserLoggedData(RegisterActivity.this, "Yes");
-                    PrefManager.setUserName(RegisterActivity.this, userName.toLowerCase());
-                    PrefManager.setUserPassword(RegisterActivity.this, password);
-                    mService.setProfileInfo(userName, email, new XmppService.onProfileSetupResponse() {
-                        @Override
-                        public void onProfileSetup(boolean isSetup) {
-                            hideDialog();
-                            if (!isSetup) toast("Profile Info Setup Error");
-                            startHomeActivity();
-                        }
-                    });
-                }
-            }
-        };
-
     }
 
     private void initView() {
@@ -111,11 +110,11 @@ public class RegisterActivity extends BaseActivity {
             public void onClick(View view) {
 
                 showDialog();
-                if (NetworkChecking.hasConnection(mContext)) {
+                if (dt.droidNet.hasConnection()) {
                     register();
                 } else {
                     hideDialog();
-                    toast("No Internet");
+                    dt.droidNet.internetErrorDialog();
                 }
             }
         });
@@ -143,6 +142,7 @@ public class RegisterActivity extends BaseActivity {
             @Override
             public void run() {
                 if(!btGo.isEnabled())btGo.setEnabled(true);
+                btGo.setText(getString(R.string.try_again));
             }
         });
     }
@@ -155,33 +155,33 @@ public class RegisterActivity extends BaseActivity {
         String email = etEmail.getText().toString().trim();
 
         if (username.isEmpty() || username.length() < 3 || username.length() > 64) {
-            //etUsername.setError(getString(R.string.valid_username));
+            etUsername.setError(getString(R.string.valid_username));
             valid = false;
         } else if (username.contains(" ") || username.contains("@") || username.contains("#")) {
-            //etUsername.setError(getString(R.string.valid_username2));
+            etUsername.setError(getString(R.string.valid_username2));
             valid = false;
         } else if (username.equals("samsung")) {
-            //etUsername.setError(getString(R.string.valid_username3));
+            etUsername.setError(getString(R.string.valid_username3));
             valid = false;
         } else {
             etUsername.setError(null);
         }
 
         if (password.isEmpty() || password.length() < 3 || password.length() > 32) {
-            //etPassword.setError(getString(R.string.valid_password));
+            etPassword.setError(getString(R.string.valid_password));
             valid = false;
         } else if (password.contains(" ")) {
-            //etPassword.setError(getString(R.string.valid_username2));
+            etPassword.setError(getString(R.string.valid_username2));
             valid = false;
         } else {
             etPassword.setError(null);
         }
 
         if (email.isEmpty() || email.length() < 10 || email.length() > 150) {
-            //etEmail.setError(getString(R.string.valid_password));
+            etEmail.setError(getString(R.string.valid_password));
             valid = false;
         } else if (email.contains(" ")) {
-            //etEmail.setError(getString(R.string.valid_username2));
+            etEmail.setError(getString(R.string.valid_username2));
             valid = false;
         } else {
             etEmail.setError(null);
@@ -193,7 +193,6 @@ public class RegisterActivity extends BaseActivity {
     // get user Register info from shared preference
     public void getUserInfo() {
         btGo.setEnabled(false);
-        btGo.setText(getString(R.string.try_again));
         userName = etUsername.getText().toString().trim();
         password = etUsername.getText().toString().trim();
         email = etEmail.getText().toString().trim();
@@ -211,22 +210,39 @@ public class RegisterActivity extends BaseActivity {
             try {
                 mService.initConnection(userName, password, new XmppService.onConnectionResponse() {
                     @Override
-                    public void onConnected(XMPPConnection connection) {
-                        if(!connection.isAuthenticated()){
+                    public void onConnected(boolean isConnected, XMPPConnection connection) {
+                        if(isConnected){
                             mService.registration(userName, password, new XmppService.onRegistrationResponse() {
                                 @Override
                                 public void onRegistered(boolean isRegistered) {
-                                    if(isRegistered){
+                                    if (isRegistered) {
                                         mService.login(userName, password, new XmppService.onLoginResponse() {
                                             @Override
                                             public void onLoggedIn(boolean isLogged) {
-                                                if(!isLogged) onRegisterFailed();
+                                                if (!isLogged) onRegisterFailed();
                                             }
                                         });
                                     } else onRegisterFailed();
                                 }
                             });
-                        }
+                        } else onRegisterFailed();
+                        /*if(connection!=null) {
+                            if (!connection.isAuthenticated()) {
+                                mService.registration(userName, password, new XmppService.onRegistrationResponse() {
+                                    @Override
+                                    public void onRegistered(boolean isRegistered) {
+                                        if (isRegistered) {
+                                            mService.login(userName, password, new XmppService.onLoginResponse() {
+                                                @Override
+                                                public void onLoggedIn(boolean isLogged) {
+                                                    if (!isLogged) onRegisterFailed();
+                                                }
+                                            });
+                                        } else onRegisterFailed();
+                                    }
+                                });
+                            }
+                        } else onRegisterFailed();*/
                     }
                 });
                 mService.connectConnection();
@@ -236,17 +252,6 @@ public class RegisterActivity extends BaseActivity {
                 xmppRegister();
             }
         }
-    }
-
-    private void startHomeActivity() {
-        Explode explode = new Explode();
-        explode.setDuration(500);
-        getWindow().setExitTransition(explode);
-        getWindow().setEnterTransition(explode);
-        ActivityOptionsCompat oc2 = ActivityOptionsCompat.makeSceneTransitionAnimation(RegisterActivity.this);
-        Intent i2 = new Intent(RegisterActivity.this,HomeActivity.class);
-        startActivity(i2, oc2.toBundle());
-        finish();
     }
 
     private void ShowEnterAnimation() {

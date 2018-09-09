@@ -1,23 +1,21 @@
 package anindya.sample.smackchat.activities;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.ActivityOptionsCompat;
-import android.support.v4.content.LocalBroadcastManager;
-import android.transition.Explode;
 import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 import org.jivesoftware.smack.XMPPConnection;
 
 import anindya.sample.smackchat.R;
+import anindya.sample.smackchat.model.BroadcastEvent;
 import anindya.sample.smackchat.services.XmppService;
-import anindya.sample.smackchat.utils.PrefManager;
+import base.droidtool.activities.BaseActivity;
+import base.droidtool.dtlib.SweetAlert;
 
 
 public class SplashActivity extends BaseActivity {
@@ -27,30 +25,39 @@ public class SplashActivity extends BaseActivity {
     private String password;
     private Window win;
     private int Count = 0;
+    private boolean isActive = false;
 
     @Override
     public void onStart() {
         super.onStart();
         Intent mIntent = new Intent(this, XmppService.class);
         bindService(mIntent, mConnection, BIND_AUTO_CREATE);
-        LocalBroadcastManager.getInstance(SplashActivity.this).registerReceiver(mBroadcastReceiver, new IntentFilter("login"));
+        EventBus.getDefault().register(this);
     }
 
     @Override
-    public void onStop() {
+    public void onDestroy() {
         if (mBounded) {
             unbindService(mConnection);
             mBounded = false;
         }
-        LocalBroadcastManager.getInstance(SplashActivity.this).unregisterReceiver(mBroadcastReceiver);
-        super.onStop();
+        isActive = false;
+        EventBus.getDefault().unregister(this);
+        super.onDestroy();
+    }
+
+    @Subscribe
+    public void onMessageEvent(BroadcastEvent event) {
+        Log.d("xmpp: ", "BroadcastEvent: " + event.item + "\nCategory: " + event.category + "\nMessage: " + event.message);
+        if(event.item.equals("login")){
+            mService.setUpReceiver();
+            dt.tools.startActivity(HomeActivity.class, "");
+        }
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mContext = this;
-
         // added the following methods to awake the device from lock state and keep screen on so the broadcast messages could be received
         win = this.getWindow();
         win.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
@@ -58,26 +65,20 @@ public class SplashActivity extends BaseActivity {
         win.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
         setContentView(R.layout.splash);
 
+        super.register(this, 0);
+        super.setStatusBarColor(getResources().getColor(R.color.contact_profile_darkBlue));
+        super.initProgressDialog(getString(R.string.getting_ready));
+
+        isActive = true;
+
         getUserInfo();
-
         GoToNext();
-
-        mBroadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                // checking for type intent filter
-                if (intent.getAction().equals("login")) {
-                    mService.setUpReceiver();
-                    startHomeActivity();
-                }
-            }
-        };
     }
 
     // get user login info from shared preference
     private void getUserInfo() {
-        userName = PrefManager.getUserName(SplashActivity.this);
-        password = PrefManager.getUserPassword(SplashActivity.this);
+        userName = dt.pref.getString("username");
+        password = dt.pref.getString("password");
     }
 
     // Go to Home Page
@@ -85,19 +86,20 @@ public class SplashActivity extends BaseActivity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (PrefManager.getUserLoggedData(SplashActivity.this).equals("Yes")) {
-                    xmppLogin();
+                if (dt.pref.getBoolean("login")) {
+                    if(dt.droidNet.hasConnection()){
+                        showDialog();
+                        xmppLogin();
+                    }
+                    else {
+                        hideDialog();
+                        dt.droidNet.internetErrorDialog();
+                    }
                 } else {
-                    goToLoginPage();
+                    dt.tools.startActivity(LoginActivity.class, "");
                 }
             }
         }, SPLASH_TIME_OUT);
-    }
-
-    private void goToLoginPage(){
-        Intent i = new Intent(SplashActivity.this, LoginActivity.class);
-        startActivity(i);
-        finish();
     }
 
     // xmpp login method
@@ -105,20 +107,30 @@ public class SplashActivity extends BaseActivity {
         Count++;
         if (Count % 4 == 0) {
             Log.d("xmpp", "time out");
-            toast("Login Failed");
+            loginFailed();
         } else {
             try {
                 mService.initConnection(userName, password, new XmppService.onConnectionResponse() {
                     @Override
-                    public void onConnected(XMPPConnection connection) {
-                        if(!connection.isAuthenticated()){
+                    public void onConnected(boolean isConnected, XMPPConnection connection) {
+                        if(isConnected){
                             mService.login(userName, password, new XmppService.onLoginResponse() {
                                 @Override
                                 public void onLoggedIn(boolean isLogged) {
-                                    if(!isLogged)toast("Login Failed");
+                                    if (!isLogged) loginFailed();
                                 }
                             });
-                        }
+                        } else loginFailed();
+                        /*if(connection!=null) {
+                            if (!connection.isAuthenticated()) {
+                                mService.login(userName, password, new XmppService.onLoginResponse() {
+                                    @Override
+                                    public void onLoggedIn(boolean isLogged) {
+                                        if (!isLogged) loginFailed();
+                                    }
+                                });
+                            }
+                        } else loginFailed();*/
                     }
                 });
                 mService.connectConnection();
@@ -130,16 +142,22 @@ public class SplashActivity extends BaseActivity {
         }
     }
 
-    // Launch Home Screen
-    private void startHomeActivity() {
-        Explode explode = new Explode();
-        explode.setDuration(500);
-        getWindow().setExitTransition(explode);
-        getWindow().setEnterTransition(explode);
-        ActivityOptionsCompat oc2 = ActivityOptionsCompat.makeSceneTransitionAnimation(SplashActivity.this);
-        Intent i2 = new Intent(SplashActivity.this, HomeActivity.class);
-        startActivity(i2, oc2.toBundle());
-        finish();
+    public void loginFailed(){
+        hideDialog();
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if(isActive){
+                    dt.alert.showWarningWithOneButton("Login Failed");
+                    dt.alert.setAlertListener(new SweetAlert.AlertListener() {
+                        @Override
+                        public void onAlertClick(boolean isCancel) {
+                            finish();
+                        }
+                    });
+                }
+            }
+        });
     }
 }
 
