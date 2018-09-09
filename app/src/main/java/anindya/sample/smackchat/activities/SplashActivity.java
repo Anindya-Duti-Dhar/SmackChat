@@ -121,16 +121,6 @@ public class SplashActivity extends BaseActivity {
                                 }
                             });
                         } else loginFailed();
-                        /*if(connection!=null) {
-                            if (!connection.isAuthenticated()) {
-                                mService.login(userName, password, new XmppService.onLoginResponse() {
-                                    @Override
-                                    public void onLoggedIn(boolean isLogged) {
-                                        if (!isLogged) loginFailed();
-                                    }
-                                });
-                            }
-                        } else loginFailed();*/
                     }
                 });
                 mService.connectConnection();

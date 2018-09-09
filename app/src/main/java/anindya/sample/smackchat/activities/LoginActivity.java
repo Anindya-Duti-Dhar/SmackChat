@@ -199,16 +199,6 @@ public class LoginActivity extends BaseActivity {
                                 }
                             });
                         } else onLoginFailed();
-                       /* if(connection!=null){
-                            if(!connection.isAuthenticated()){
-                                mService.login(userName, password, new XmppService.onLoginResponse() {
-                                    @Override
-                                    public void onLoggedIn(boolean isLogged) {
-                                        if(!isLogged) onLoginFailed();
-                                    }
-                                });
-                            }
-                        } else onLoginFailed();*/
                     }
                 });
                 mService.connectConnection();

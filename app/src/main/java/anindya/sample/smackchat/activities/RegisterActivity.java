@@ -226,23 +226,6 @@ public class RegisterActivity extends BaseActivity {
                                 }
                             });
                         } else onRegisterFailed();
-                        /*if(connection!=null) {
-                            if (!connection.isAuthenticated()) {
-                                mService.registration(userName, password, new XmppService.onRegistrationResponse() {
-                                    @Override
-                                    public void onRegistered(boolean isRegistered) {
-                                        if (isRegistered) {
-                                            mService.login(userName, password, new XmppService.onLoginResponse() {
-                                                @Override
-                                                public void onLoggedIn(boolean isLogged) {
-                                                    if (!isLogged) onRegisterFailed();
-                                                }
-                                            });
-                                        } else onRegisterFailed();
-                                    }
-                                });
-                            }
-                        } else onRegisterFailed();*/
                     }
                 });
                 mService.connectConnection();
