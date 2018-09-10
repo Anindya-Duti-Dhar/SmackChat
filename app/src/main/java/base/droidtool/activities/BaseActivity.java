@@ -18,6 +18,7 @@ import android.widget.Toast;
 import com.amitshekhar.DebugDB;
 
 import anindya.sample.smackchat.R;
+import anindya.sample.smackchat.activities.HomeActivity;
 import anindya.sample.smackchat.services.XmppService;
 import anindya.sample.smackchat.utils.LocalBinder;
 import base.droidtool.DroidTool;
@@ -109,6 +110,19 @@ public abstract class BaseActivity extends AppCompatActivity {
         if (!TextUtils.isEmpty(activityTitle)) {
             setupToolbar(activityTitle);
         }
+    }
+
+    // back arrow action
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
+    }
+
+    // back button press method
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
     }
 
     // bind toolbar
