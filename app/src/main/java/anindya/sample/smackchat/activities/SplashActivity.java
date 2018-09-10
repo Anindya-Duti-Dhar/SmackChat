@@ -32,7 +32,7 @@ public class SplashActivity extends BaseActivity {
         super.onStart();
         Intent mIntent = new Intent(this, XmppService.class);
         bindService(mIntent, mConnection, BIND_AUTO_CREATE);
-        EventBus.getDefault().register(this);
+        if(!EventBus.getDefault().isRegistered(this))EventBus.getDefault().register(this);
     }
 
     @Override
@@ -42,7 +42,7 @@ public class SplashActivity extends BaseActivity {
             mBounded = false;
         }
         isActive = false;
-        EventBus.getDefault().unregister(this);
+        if(EventBus.getDefault().isRegistered(this))EventBus.getDefault().unregister(this);
         super.onDestroy();
     }
 
@@ -65,7 +65,7 @@ public class SplashActivity extends BaseActivity {
         win.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
         setContentView(R.layout.splash);
 
-        super.register(this, 0);
+        super.register(this, "");
         super.setStatusBarColor(getResources().getColor(R.color.contact_profile_darkBlue));
         super.initProgressDialog(getString(R.string.getting_ready));
 

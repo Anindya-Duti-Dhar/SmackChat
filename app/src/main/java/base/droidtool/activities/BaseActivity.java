@@ -9,6 +9,7 @@ import android.os.IBinder;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
@@ -102,20 +103,20 @@ public abstract class BaseActivity extends AppCompatActivity {
         window.setStatusBarColor(colorRes);
     }
 
-    public void register(Context context, int activityTitle) {
+    public void register(Context context, String activityTitle) {
         mContext = context;
         dt = new DroidTool(mContext);
-        if (activityTitle > 0) {
+        if (!TextUtils.isEmpty(activityTitle)) {
             setupToolbar(activityTitle);
         }
     }
 
     // bind toolbar
-    public void setupToolbar(int titleResourceId) {
+    public void setupToolbar(String title) {
         // Set up the toolbar.
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        toolbar.setTitle(titleResourceId);
+        toolbar.setTitle(title);
 
         // bind back arrow in toolbar
         ActionBar ctBr = getSupportActionBar();

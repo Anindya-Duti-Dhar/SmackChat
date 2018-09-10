@@ -16,7 +16,7 @@ public class CrashActivity extends BaseActivity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setFinishOnTouchOutside(false);
         setContentView(R.layout.activity_crash);
-        register(this, 0);
+        register(this, "");
 
         dt.alert.showError(dt.gStr(R.string.sorry), dt.gStr(R.string.crash_message), dt.gStr(R.string.ok));
         dt.alert.setAlertListener(new SweetAlert.AlertListener() {

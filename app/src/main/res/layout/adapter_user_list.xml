@@ -33,10 +33,9 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="8dp"
                     android:layout_marginRight="8dp"
-                    android:layout_marginTop="10dp"
-                    android:layout_marginBottom="10dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="12dp"
                     android:orientation="horizontal"
                     android:weightSum="4.5">
 
@@ -48,8 +47,8 @@
 
                         <de.hdodenhof.circleimageview.CircleImageView
                             android:id="@+id/user_image"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
                             android:layout_alignParentTop="true"
                             android:layout_centerHorizontal="true"
                             android:layout_gravity="center"
@@ -60,8 +59,8 @@
 
                         <TextView
                             android:id="@+id/user_no_image"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
                             android:layout_alignParentTop="true"
                             android:layout_centerHorizontal="true"
                             android:layout_gravity="center"
@@ -104,7 +103,7 @@
                             android:scrollHorizontally="true"
                             android:text="User name"
                             android:textColor="@color/contact_list_item_name"
-                            android:textSize="15sp" />
+                            android:textSize="16sp" />
 
                         <TextView
                             android:id="@+id/user_email"

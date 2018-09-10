@@ -83,12 +83,12 @@ public class Chat extends BaseActivity {
     public void onStart() {
         super.onStart();
         Log.d("xmpp", "onStart");
-        EventBus.getDefault().register(this);
+        if(!EventBus.getDefault().isRegistered(this))EventBus.getDefault().register(this);
     }
 
     @Override
     public void onStop() {
-        EventBus.getDefault().unregister(this);
+        if(EventBus.getDefault().isRegistered(this))EventBus.getDefault().unregister(this);
         Log.d("xmpp", "onStop");
         super.onStop();
     }
@@ -114,7 +114,7 @@ public class Chat extends BaseActivity {
         super.onCreate(savedInstanceState);
         Log.d("xmpp", "onCreate");
         setContentView(R.layout.chat);
-        super.register(this, R.string.app_name);
+        super.register(this, getString(R.string.app_name));
         super.setStatusBarColor(getResources().getColor(R.color.contact_profile_darkBlue));
         super.initProgressDialog(getString(R.string.getting_ready));
 

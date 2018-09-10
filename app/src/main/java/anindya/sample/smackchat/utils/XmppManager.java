@@ -250,6 +250,7 @@ public class XmppManager {
         VCard vcard = new VCard();
         vcard.setFirstName(userName);
         vcard.setEmailHome(email);
+        vcard.setEmailWork(email);
         vcard.setNickName(userName);
         vcard.setField("Designation", "Developer");
         vcard.setPhoneHome("Voice", "12783849404");

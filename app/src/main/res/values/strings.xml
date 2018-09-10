@@ -24,6 +24,7 @@
     <string name="xmpp_signin_error">XMPP Signin Error!</string>
     <string name="xmpp_connection_error">XMPP Connection Error!</string>
     <string name="thanks">Thanks</string>
+    <string name="empty_string"></string>
     <!--Login Screen end-->
     <string name="try_again">Try again</string>
 

@@ -2,6 +2,7 @@ package anindya.sample.smackchat.adapter;
 
 
 import android.content.Context;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +13,7 @@ import android.widget.TextView;
 import java.util.List;
 
 import anindya.sample.smackchat.R;
+import anindya.sample.smackchat.activities.ContactProfileActivity;
 import anindya.sample.smackchat.model.Users;
 import base.droidtool.DroidTool;
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -22,6 +24,7 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
         public CircleImageView userImage;
         public ImageView userOnlineStatus;
         public TextView username, userEmail, userNoImage;
+        public CardView cardView;
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -30,6 +33,7 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
             userImage = (CircleImageView) itemView.findViewById(R.id.user_image);
             userOnlineStatus = (ImageView) itemView.findViewById(R.id.user_online_status);
             userNoImage = (TextView) itemView.findViewById(R.id.user_no_image);
+            cardView = (CardView) itemView.findViewById(R.id.item_card_view);
         }
     }
 
@@ -69,7 +73,7 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
         TextView username = viewHolder.username;
         username.setText(data.getUsername());
         TextView userEmail = viewHolder.userEmail;
-        userEmail.setText(data.getEmail());
+        userEmail.setText(data.getUsername()+"@example.com");
 
         ImageView userOnlineStatus = viewHolder.userOnlineStatus;
         userOnlineStatus.setImageResource(R.drawable.ic_online);
@@ -78,6 +82,14 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
         TextView userNoImage = viewHolder.userNoImage;
         userNoImage.setVisibility(View.VISIBLE);
         userNoImage.setText(String.valueOf(data.getUsername().toString().charAt(0)));
+
+        CardView cardView = viewHolder.cardView;
+        cardView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dt.tools.startActivity(ContactProfileActivity.class, data.getUsername());
+            }
+        });
 
     }
 

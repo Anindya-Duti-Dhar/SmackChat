@@ -9,7 +9,7 @@
     <color name="black">#000000</color>
     <color name="transparent">#00000000</color>
 
-
+    <color name="black_transparent_10">#10000000</color>
 
     <color name="blue_light_btn">#4bb1e3</color>
     <color name="green">#57ffc1</color>
