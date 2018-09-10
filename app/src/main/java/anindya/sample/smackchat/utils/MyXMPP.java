@@ -909,7 +909,7 @@ public class MyXMPP {
                         }
 
                         Log.d("xmpp: ", "From: " + OnlyUserName + "\nTime: " + timestamp + "\nSubject: " + subject + "\nMessage: " + body + "\nMessage ID: " + messageID);
-                        EventBus.getDefault().postSticky(new ChatEvent(OnlyUserName, body, subject, messageID));
+                        EventBus.getDefault().postSticky(new ChatEvent(message.getType(), subject, body, messageID, timestamp, OnlyUserName));
                     }
                 }
             };

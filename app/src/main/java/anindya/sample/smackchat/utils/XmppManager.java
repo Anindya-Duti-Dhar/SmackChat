@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -13,9 +14,14 @@ import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.filter.MessageTypeFilter;
+import org.jivesoftware.smack.filter.StanzaFilter;
+import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.packet.StandardExtensionElement;
 import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
@@ -24,6 +30,7 @@ import org.jivesoftware.smack.roster.SubscribeListener;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.iqregister.AccountManager;
+import org.jivesoftware.smackx.mam.MamManager;
 import org.jivesoftware.smackx.ping.PingFailedListener;
 import org.jivesoftware.smackx.ping.PingManager;
 import org.jivesoftware.smackx.receipts.DeliveryReceiptManager;
@@ -46,6 +53,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 
 import anindya.sample.smackchat.R;
+import anindya.sample.smackchat.activities.SplashActivity;
 import anindya.sample.smackchat.model.BroadcastEvent;
 import anindya.sample.smackchat.model.ChatEvent;
 import anindya.sample.smackchat.model.MyFriend;
@@ -63,6 +71,10 @@ public class XmppManager {
     public AbstractXMPPConnection connection;
     public XMPPConnectionListener connectionListener = new XMPPConnectionListener();
     public List<MyFriend> friendList = new ArrayList<MyFriend>();
+    StanzaListener mStanzaListener;
+    StanzaListener mChatStanzaListener;
+    StanzaFilter filter;
+    StanzaFilter mChatFilter;
 
     public onRegistrationResponse registrationResponse = null;
 
@@ -169,35 +181,36 @@ public class XmppManager {
 
             @Override
             protected Boolean doInBackground(Void... arg0) {
-                if(!connection.isConnected()){
+                if (!connection.isConnected()) {
                     try {
                         connection.connect();
                     } catch (SmackException e) {
                         e.printStackTrace();
                         Log.d("xmpp: ", "Connection Error: " + e.getMessage());
-                        if(connectionResponse!=null)connectionResponse.onConnected(false, null);
+                        if (connectionResponse != null) connectionResponse.onConnected(false, null);
                     } catch (IOException e) {
                         e.printStackTrace();
                         Log.d("xmpp: ", "Connection Error: " + e.getMessage());
-                        if(connectionResponse!=null)connectionResponse.onConnected(false, null);
+                        if (connectionResponse != null) connectionResponse.onConnected(false, null);
                     } catch (XMPPException e) {
                         e.printStackTrace();
                         Log.d("xmpp: ", "Connection Error: " + e.getMessage());
-                        if(connectionResponse!=null)connectionResponse.onConnected(false, null);
+                        if (connectionResponse != null) connectionResponse.onConnected(false, null);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                         Log.d("xmpp: ", "Connection Error: " + e.getMessage());
-                        if(connectionResponse!=null)connectionResponse.onConnected(false, null);
+                        if (connectionResponse != null) connectionResponse.onConnected(false, null);
                     }
-                } else if(connectionResponse!=null)connectionResponse.onConnected(true, listenerConnection);
+                } else if (connectionResponse != null)
+                    connectionResponse.onConnected(true, listenerConnection);
                 return null;
             }
         };
         connectionThread.execute();
     }
 
-    public boolean isAuthenticated(){
-        if(connection.isAuthenticated())return true;
+    public boolean isAuthenticated() {
+        if (connection.isAuthenticated()) return true;
         else return false;
     }
 
@@ -221,27 +234,27 @@ public class XmppManager {
             accountManager.sensitiveOperationOverInsecureConnection(true);
             accountManager.createAccount(lp, passWord);
             Log.d("xmpp: ", "Account create Requested");
-            if(registrationResponse!=null)registrationResponse.onRegistered(true);
+            if (registrationResponse != null) registrationResponse.onRegistered(true);
         } catch (XmppStringprepException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Registration Failure XmppStringprepException: " + e.getMessage());
-            if(registrationResponse!=null)registrationResponse.onRegistered(false);
+            if (registrationResponse != null) registrationResponse.onRegistered(false);
         } catch (SmackException.NoResponseException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Registration Failure No Response: " + e.getMessage());
-            if(registrationResponse!=null)registrationResponse.onRegistered(false);
+            if (registrationResponse != null) registrationResponse.onRegistered(false);
         } catch (XMPPException.XMPPErrorException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Registration Failure XMPP error: " + e.getMessage());
-            if(registrationResponse!=null)registrationResponse.onRegistered(false);
+            if (registrationResponse != null) registrationResponse.onRegistered(false);
         } catch (SmackException.NotConnectedException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Registration Failure not connected: " + e.getMessage());
-            if(registrationResponse!=null)registrationResponse.onRegistered(false);
+            if (registrationResponse != null) registrationResponse.onRegistered(false);
         } catch (InterruptedException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Registration Failure InterruptedException: " + e.getMessage());
-            if(registrationResponse!=null)registrationResponse.onRegistered(false);
+            if (registrationResponse != null) registrationResponse.onRegistered(false);
         }
     }
 
@@ -258,23 +271,23 @@ public class XmppManager {
         try {
             vcard.save(connection);
             Log.d("xmpp: ", "Profile Info Requested");
-            if(profileSetupResponse!=null)profileSetupResponse.onProfileSetup(true);
+            if (profileSetupResponse != null) profileSetupResponse.onProfileSetup(true);
         } catch (SmackException.NoResponseException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Profile Info Failed: " + e.getMessage());
-            if(profileSetupResponse!=null)profileSetupResponse.onProfileSetup(false);
+            if (profileSetupResponse != null) profileSetupResponse.onProfileSetup(false);
         } catch (XMPPException.XMPPErrorException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Profile Info Failed: " + e.getMessage());
-            if(registrationResponse!=null)registrationResponse.onRegistered(false);
+            if (registrationResponse != null) registrationResponse.onRegistered(false);
         } catch (SmackException.NotConnectedException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Profile Info Failed: " + e.getMessage());
-            if(registrationResponse!=null)registrationResponse.onRegistered(false);
+            if (registrationResponse != null) registrationResponse.onRegistered(false);
         } catch (InterruptedException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Profile Info Failed: " + e.getMessage());
-            if(registrationResponse!=null)registrationResponse.onRegistered(false);
+            if (registrationResponse != null) registrationResponse.onRegistered(false);
         }
     }
 
@@ -290,34 +303,34 @@ public class XmppManager {
         } catch (XMPPException | SmackException | IOException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Login Failure: " + e.getMessage());
-            if(loginResponse!=null)loginResponse.onLoggedIn(false);
+            if (loginResponse != null) loginResponse.onLoggedIn(false);
         } catch (Exception e) {
             Log.d("xmpp: ", "Login Failure: " + e.getMessage());
-            if(loginResponse!=null)loginResponse.onLoggedIn(false);
+            if (loginResponse != null) loginResponse.onLoggedIn(false);
         }
     }
 
     // Get Friend List function
-    public void getFriendList(){
+    public void getFriendList() {
         Roster roster = Roster.getInstanceFor(connection);
         if (roster != null && !roster.isLoaded()) {
-            try{
+            try {
                 roster.reloadAndWait();
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
                 Log.d("xmpp::::::: ", "All User failed: " + e.getMessage());
-                if(friendLoadResponse!=null)friendLoadResponse.onLoaded(friendList);
+                if (friendLoadResponse != null) friendLoadResponse.onLoaded(friendList);
             }
         }
 
-        if (roster != null){
+        if (roster != null) {
             getFriendList(roster);
         }
 
         roster.addRosterLoadedListener(new RosterLoadedListener() {
             @Override
             public void onRosterLoaded(Roster roster) {
-                if (roster != null){
+                if (roster != null) {
                     getFriendList(roster);
                 }
             }
@@ -325,16 +338,16 @@ public class XmppManager {
             @Override
             public void onRosterLoadingFailed(Exception e) {
                 Log.d("xmpp:::::::: ", "All User failed: " + e.getMessage());
-                if(friendLoadResponse!=null)friendLoadResponse.onLoaded(friendList);
+                if (friendLoadResponse != null) friendLoadResponse.onLoaded(friendList);
             }
         });
     }
 
-    public void getFriendList(Roster roster){
+    public void getFriendList(Roster roster) {
         Collection<RosterEntry> entries = roster.getEntries();
         Presence presence;
         friendList.clear();
-        for(RosterEntry entry : entries) {
+        for (RosterEntry entry : entries) {
             presence = roster.getPresence(entry.getJid());
             MyFriend friend = new MyFriend();
             friend.setjID(String.valueOf(entry.getJid()));
@@ -343,7 +356,157 @@ public class XmppManager {
             friend.setStatus(presence.getStatus());
             friendList.add(friend);
         }
-        if(friendLoadResponse!=null)friendLoadResponse.onLoaded(friendList);
+        if (friendLoadResponse != null) friendLoadResponse.onLoaded(friendList);
+    }
+
+    // send message using Stanza of Smack
+    public void sendStanza(String username, Message.Type type, String subject, String chat) {
+        Jid jid = null;
+        try {
+            jid = JidCreate.bareFrom(username + "@" + CHAT_SERVER_SERVICE_NAME);
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "BareJid create Failure: " + e.getMessage());
+        }
+
+        Message message = new Message();
+        message.setFrom(connection.getUser());
+        message.setTo(jid);
+        message.setType(type);
+        message.setSubject(subject);
+        message.setBody(chat);
+
+        //Creating Standard packet extension with name as 'timestamp' and urn as 'urn:xmpp:timestamp'
+        StandardExtensionElement messageTimeStamp = StandardExtensionElement.builder(
+                "timestamp", "urn:xmpp:timestamp")
+                .addAttribute("timestamp", String.valueOf(System.currentTimeMillis()))  //Setting value in extension
+                .build();
+
+        //Add extension to message tag
+        message.addExtension(messageTimeStamp);
+
+        try {
+            connection.sendStanza(message);
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Message send Error: " + e.getMessage());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Message send Error: " + e.getMessage());
+        }
+    }
+
+    // received Messages from individual user by Stanza
+    public void receiveStanza() {
+        mChatFilter = MessageTypeFilter.CHAT;
+        mChatStanzaListener = new StanzaListener() {
+            @Override
+            public void processStanza(Stanza packet) throws SmackException.NotConnectedException, InterruptedException, SmackException.NotLoggedInException {
+                Message message = (Message) packet;
+                if (message.getBody() != null) {
+                    String from = String.valueOf(message.getFrom());
+                    //Get the extension from message
+                    StandardExtensionElement messageTimeStamp = (StandardExtensionElement) message
+                            .getExtension("urn:xmpp:timestamp");
+
+                    String timestamp = "";
+                    //Get the value from extension
+                    if (messageTimeStamp != null) {
+                        long timestampOriginal = Long.parseLong(messageTimeStamp.getAttributeValue("timestamp"));
+                        timestamp = convertDate(timestampOriginal, "dd-MMM-yyyy h:mm a");
+                    }
+                    /*if (NotificationUtils.isAppIsInBackground(mContext)) {
+                        Intent resultIntent = new Intent(mContext, SplashActivity.class);
+                        resultIntent.putExtra("message", body);
+                        NotificationUtils notificationUtils = new NotificationUtils(mContext);
+                        notificationUtils.showNotificationMessage(subject, body, "", resultIntent);
+                    }*/
+                    EventBus.getDefault().postSticky(new BroadcastEvent(new ChatEvent(message.getType(), message.getSubject(), message.getBody(), message.getStanzaId(), timestamp, from)));
+                }
+            }
+        };
+        connection.addSyncStanzaListener(mChatStanzaListener, mChatFilter);   // remove addAsyncStanzaListener to avoid duplicate messages
+    }
+
+    public onOldMessagesResponse oldMessagesResponse = null;
+
+    public interface onOldMessagesResponse {
+        void onReceived(List<Message> message);
+    }
+
+    public void setOldMessagesResponseListener(onOldMessagesResponse listener) {
+        oldMessagesResponse = listener;
+    }
+
+
+    public void getOldMessages(String username) {
+        MamManager mamManager = MamManager.getInstanceFor(connection);
+        try {
+            boolean isSupported = mamManager.isSupported(); // it's true
+        } catch (SmackException.NoResponseException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "MamManager isSupported error: " + e.getMessage());
+        } catch (XMPPException.XMPPErrorException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "MamManager isSupported error: " + e.getMessage());
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "MamManager isSupported error: " + e.getMessage());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "MamManager isSupported error: " + e.getMessage());
+        }
+
+        Jid jid = null;
+        try {
+            jid = JidCreate.bareFrom(username + "@" + CHAT_SERVER_SERVICE_NAME);
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "BareJid create Failure: " + e.getMessage());
+        }
+
+        MamManager.MamQuery mamQueryResult = null;
+        try {
+            mamQueryResult = mamManager.queryMostRecentPage(jid, 10000);
+        } catch (SmackException.NoResponseException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Old Messages Error: " + e.getMessage());
+        } catch (XMPPException.XMPPErrorException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Old Messages Error: " + e.getMessage());
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Old Messages Error: " + e.getMessage());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Old Messages Error: " + e.getMessage());
+        } catch (SmackException.NotLoggedInException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Old Messages Error: " + e.getMessage());
+        }
+
+        List<Message> forwardedMessages = mamQueryResult.getMessages();
+        if (forwardedMessages != null) {
+            if (forwardedMessages.size() > 0) {
+                for (Message message: forwardedMessages) {
+                    String from = String.valueOf(message.getFrom());
+                    //Get the extension from message
+                    StandardExtensionElement messageTimeStamp = (StandardExtensionElement) message.getExtension("urn:xmpp:timestamp");
+                    String timestamp = "";
+                    //Get the value from extension
+                    if (messageTimeStamp != null) {
+                        long timestampOriginal = Long.parseLong(messageTimeStamp.getAttributeValue("timestamp"));
+                        timestamp = convertDate(timestampOriginal, "dd-MMM-yyyy h:mm a");
+                    }
+                    EventBus.getDefault().postSticky(new BroadcastEvent(new ChatEvent(message.getType(), message.getSubject(), message.getBody(), message.getStanzaId(), timestamp, from)));
+                }
+            }
+        }
+        if(oldMessagesResponse!=null)oldMessagesResponse.onReceived(forwardedMessages);
+    }
+
+    public static String convertDate(Long dateInMilliseconds, String dateFormat) {
+        return DateFormat.format(dateFormat, dateInMilliseconds).toString();
     }
 
     public XMPPConnection listenerConnection = null;
@@ -355,29 +518,29 @@ public class XmppManager {
         public void connected(final XMPPConnection connection) {
             Log.d("xmpp: ", "Connected!");
             listenerConnection = connection;
-            if(connectionResponse!=null)connectionResponse.onConnected(true, connection);
+            if (connectionResponse != null) connectionResponse.onConnected(true, connection);
         }
 
         @Override
         public void connectionClosed() {
             Log.d("xmpp: ", "ConnectionCLosed!");
-            if(connectionResponse!=null)connectionResponse.onConnected(false, null);
+            if (connectionResponse != null) connectionResponse.onConnected(false, null);
         }
 
         @Override
         public void connectionClosedOnError(Exception arg0) {
-            Log.d("xmpp: ", "ConnectionClosedOn Error: "+arg0.getMessage());
-            if(connectionResponse!=null)connectionResponse.onConnected(false, null);
+            Log.d("xmpp: ", "ConnectionClosedOn Error: " + arg0.getMessage());
+            if (connectionResponse != null) connectionResponse.onConnected(false, null);
         }
 
         @Override
         public void authenticated(XMPPConnection connection, boolean authenticated) {
-            Log.d("xmpp: ", "Authenticated : "+ authenticated);
-            if (authenticated)if(loginResponse!=null)loginResponse.onLoggedIn(true);
+            Log.d("xmpp: ", "Authenticated : " + authenticated);
+            if (authenticated) if (loginResponse != null) loginResponse.onLoggedIn(true);
         }
     }
 
-    public void setUpReceiver(){
+    public void setUpReceiver() {
         // send ping
         sendPing(connection);
         // init message delivery reports
@@ -421,15 +584,15 @@ public class XmppManager {
     }
 
     // method to receive Friend Request
-    public void receiveFriendRequest(){
+    public void receiveFriendRequest() {
         Roster roster = Roster.getInstanceFor(connection);
         roster.addSubscribeListener(new SubscribeListener() {
             @Override
             public SubscribeAnswer processSubscribe(Jid from, Presence subscribeRequest) {
-                if(subscribeRequest.getType()==Presence.Type.subscribe){
+                if (subscribeRequest.getType() == Presence.Type.subscribe) {
                     String username = String.valueOf(from);
-                    Log.d("xmpp: ", "Friend request from: "+username);
-                    toast("Friend request from: "+username);
+                    Log.d("xmpp: ", "Friend request from: " + username);
+                    toast("Friend request from: " + username);
                     //sendFriendRequest(username, Presence.Type.subscribed);
                     //sendFriendRequest(username, Presence.Type.subscribe);
                 }
@@ -438,7 +601,7 @@ public class XmppManager {
         });
     }
 
-    public void toast(String msg){
+    public void toast(String msg) {
         Toast.makeText(mContext, msg, Toast.LENGTH_SHORT).show();
     }
 }

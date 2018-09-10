@@ -11,6 +11,7 @@ import android.util.Log;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.packet.Message;
 
 import java.util.List;
 
@@ -147,6 +148,29 @@ public class XmppService extends Service {
 
     public void setUpReceiver(){
         xmppManager.setUpReceiver();
+    }
+
+    public void sendStanza(String username, Message.Type type, String subject, String chat){
+        xmppManager.sendStanza(username, type, subject, chat);
+    }
+
+    public void receiveStanza(){
+        xmppManager.receiveStanza();
+    }
+
+    public interface onOldMessagesResponse {
+        void onReceived(List<Message> message);
+    }
+
+    public void receiveOldMessages(String username, onOldMessagesResponse listener){
+        final onOldMessagesResponse oldMessagesResponse = listener;
+        xmppManager.setOldMessagesResponseListener(new XmppManager.onOldMessagesResponse() {
+            @Override
+            public void onReceived(List<Message> message) {
+                if(oldMessagesResponse!=null)oldMessagesResponse.onReceived(message);
+            }
+        });
+        xmppManager.getOldMessages(username);
     }
 
     @Override

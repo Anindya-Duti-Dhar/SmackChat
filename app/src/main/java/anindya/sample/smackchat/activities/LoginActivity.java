@@ -134,6 +134,7 @@ public class LoginActivity extends BaseActivity {
             @Override
             public void run() {
                 if (!btGo.isEnabled()) btGo.setEnabled(true);
+                btGo.setText(getString(R.string.try_again));
             }
         });
     }
@@ -173,7 +174,6 @@ public class LoginActivity extends BaseActivity {
     // get user login info from shared preference
     public void getUserInfo() {
         btGo.setEnabled(false);
-        btGo.setText(getString(R.string.try_again));
         userName = etUsername.getText().toString().trim();
         password = etUsername.getText().toString().trim();
     }

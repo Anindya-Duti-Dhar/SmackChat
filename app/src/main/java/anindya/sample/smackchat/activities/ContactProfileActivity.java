@@ -51,6 +51,8 @@ public class ContactProfileActivity extends BaseActivity {
 
         //region Load Record Using Extras
         if (!dt.extra().isEmpty()) setupToolbar(dt.extra());
+        dt.ui.textView.set(R.id.contact_profile_toolbar_title, dt.extra());
+        dt.ui.textView.set(R.id.contact_fullname, dt.extra());
         //endregion
     }
 
