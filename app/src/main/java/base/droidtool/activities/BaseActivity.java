@@ -3,6 +3,7 @@ package base.droidtool.activities;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -17,6 +18,8 @@ import android.widget.Toast;
 
 import com.amitshekhar.DebugDB;
 
+import org.greenrobot.eventbus.EventBus;
+
 import anindya.sample.smackchat.R;
 import anindya.sample.smackchat.activities.HomeActivity;
 import anindya.sample.smackchat.services.XmppService;
@@ -30,6 +33,9 @@ public abstract class BaseActivity extends AppCompatActivity {
     public Context mContext;
     public DroidTool dt;
     public ProgressDialog mProgressDialog;
+
+    public String username, password;
+
     public XmppService mService;
     public boolean mBounded;
     public ServiceConnection mConnection = new ServiceConnection() {
@@ -41,6 +47,7 @@ public abstract class BaseActivity extends AppCompatActivity {
             mService = ((LocalBinder<XmppService>) service).getService();
             mBounded = true;
             Log.d("xmpp:", "onServiceConnected");
+            if(serviceCreatedListener!=null)serviceCreatedListener.onServiceCreated();
         }
 
         @Override
@@ -50,6 +57,26 @@ public abstract class BaseActivity extends AppCompatActivity {
             Log.d("xmpp:", "onServiceDisconnected");
         }
     };
+
+    public onServiceCreatedListener serviceCreatedListener = null;
+
+    public interface onServiceCreatedListener {
+        void onServiceCreated();
+    }
+
+    public void registerService(Context context, onServiceCreatedListener listener){
+        serviceCreatedListener = listener;
+        Intent mIntent = new Intent(context, XmppService.class);
+        bindService(mIntent, mConnection, BIND_AUTO_CREATE);
+        if(!EventBus.getDefault().isRegistered(context))EventBus.getDefault().register(context);
+    }
+    public void unregisterService(Context context){
+        if (mBounded) {
+            unbindService(mConnection);
+            mBounded = false;
+        }
+        if(EventBus.getDefault().isRegistered(context))EventBus.getDefault().unregister(context);
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -94,6 +121,11 @@ public abstract class BaseActivity extends AppCompatActivity {
         });
     }
 
+    public void getCurrentUserInfo(){
+        username = dt.pref.getString("username");
+        password = dt.pref.getString("password");
+    }
+
     public void setStatusBarColor(int colorRes){
         Window window = this.getWindow();
         // clear FLAG_TRANSLUCENT_STATUS flag:
@@ -110,6 +142,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         if (!TextUtils.isEmpty(activityTitle)) {
             setupToolbar(activityTitle);
         }
+        getCurrentUserInfo();
     }
 
     // back arrow action

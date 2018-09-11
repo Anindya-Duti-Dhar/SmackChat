@@ -1,24 +1,26 @@
 package anindya.sample.smackchat.activities;
 
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
-import android.widget.ImageButton;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.Message;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import anindya.sample.smackchat.R;
-import anindya.sample.smackchat.adapter.ChatAdapter;
 import anindya.sample.smackchat.adapter.ChatListAdapter;
 import anindya.sample.smackchat.model.BroadcastEvent;
 import anindya.sample.smackchat.model.ChatItem;
@@ -27,71 +29,88 @@ import base.droidtool.activities.BaseActivity;
 
 public class ChatActivity extends BaseActivity {
 
-    ArrayList<ChatItem> chatItem;
+    ArrayList<ChatItem> chatItemArrayList = new ArrayList<ChatItem>();
     RecyclerView recyclerView;
-    ChatListAdapter adapter;
-    String userName;
-    String mChat;
     LinearLayoutManager mLinearLayoutManager;
-    ChatItem chatListObject;
+    ChatListAdapter adapter;
+    String opponentName, mChat;
+    EditText etChat;
+    boolean isLogged = false;
+    int Count = 0;
 
     @Override
     public void onStart() {
         super.onStart();
-        Intent mIntent = new Intent(this, XmppService.class);
-        bindService(mIntent, mConnection, BIND_AUTO_CREATE);
-        if(!EventBus.getDefault().isRegistered(this))EventBus.getDefault().register(this);
+        registerService(ChatActivity.this, new onServiceCreatedListener() {
+            @Override
+            public void onServiceCreated() {
+                xmppLogin();
+            }
+        });
     }
 
     @Override
     public void onDestroy() {
-        if (mBounded) {
-            unbindService(mConnection);
-            mBounded = false;
-        }
-        if(EventBus.getDefault().isRegistered(this))EventBus.getDefault().unregister(this);
+        unregisterService(ChatActivity.this);
         super.onDestroy();
     }
 
     @Subscribe
     public void onMessageEvent(BroadcastEvent event) {
-        Log.d("xmpp: ", "BroadcastEvent: " + event.item + "\nCategory: " + event.category + "\nMessage: " + event.message);
         if(event.item.equals("login")){
-
-        } else if(event.chatEvent.type== Message.Type.chat){
-            if(event.chatEvent.subject.equals("chat")){
-                addMessage(event.chatEvent.type, event.chatEvent.subject, event.chatEvent.message, event.chatEvent.messageID, event.chatEvent.timeStamp, event.chatEvent.from);
+            isLogged = true;
+            mService.setUpReceiver();
+            mService.receiveOldMessages(opponentName, new XmppService.onOldMessagesResponse() {
+                @Override
+                public void onReceived(List<Message> message) {
+                    mService.receiveStanza();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            recyclerView.setLayoutManager(mLinearLayoutManager);
+                            recyclerView.setAdapter(adapter);
+                            mLinearLayoutManager.setStackFromEnd(true);
+                        }
+                    });
+                    hideDialog();
+                }
+            });
+        } else if(event.item.equals("chat")) {
+            if (event.chatEvent.type == Message.Type.chat) {
+                if (event.chatEvent.subject.equals("chat")) {
+                    addMessage(event.chatEvent.type, event.chatEvent.subject, event.chatEvent.message, event.chatEvent.messageID, event.chatEvent.timeStamp, event.chatEvent.from);
+                }
             }
         }
     }
 
     private void addMessage(Message.Type type, String subject, String message, String messageID, String timeStamp, String from) {
-                chatListObject = new ChatItem();
+                ChatItem chatItem = new ChatItem();
                 // check last message ID with last entered message ID in array list
-                if (!chatItem.isEmpty()) {
-                    if (chatItem.get(chatItem.size() - 1).getChatMessageID() != messageID) {
-                        chatListObject.setChatMessageType(type);
-                        chatListObject.setChatSubject(subject);
-                        chatListObject.setChatText(message);
-                        chatListObject.setChatMessageID(messageID);
-                        chatListObject.setChatTimeStamp(timeStamp);
-                        chatListObject.setChatUserName(from);
-                        chatItem.add(chatListObject);
+                if (!chatItemArrayList.isEmpty()) {
+                    if (chatItemArrayList.get(chatItemArrayList.size() - 1).getChatMessageID() != messageID) {
+                        chatItem.setChatMessageType(type);
+                        chatItem.setChatSubject(subject);
+                        chatItem.setChatText(message);
+                        chatItem.setChatMessageID(messageID);
+                        chatItem.setChatTimeStamp(timeStamp);
+                        chatItem.setChatUserName(from);
+                        chatItemArrayList.add(chatItem);
                     }
                 } else {
-                    chatListObject.setChatMessageType(type);
-                    chatListObject.setChatSubject(subject);
-                    chatListObject.setChatText(message);
-                    chatListObject.setChatMessageID(messageID);
-                    chatListObject.setChatTimeStamp(timeStamp);
-                    chatListObject.setChatUserName(from);
-                    chatItem.add(chatListObject);
+                    chatItem.setChatMessageType(type);
+                    chatItem.setChatSubject(subject);
+                    chatItem.setChatText(message);
+                    chatItem.setChatMessageID(messageID);
+                    chatItem.setChatTimeStamp(timeStamp);
+                    chatItem.setChatUserName(from);
+                    chatItemArrayList.add(chatItem);
                 }
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         adapter.notifyDataSetChanged();
-                        recyclerView.scrollToPosition(chatItem.size() - 1);
+                        recyclerView.scrollToPosition(chatItemArrayList.size() - 1);
                     }
                 });
     }
@@ -111,35 +130,64 @@ public class ChatActivity extends BaseActivity {
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
         //region Load Record Using Extras
-        if (!dt.extra().isEmpty()) userName = dt.extra();
-        dt.ui.textView.set(R.id.chat_toolbar_title, userName);
+        if (!dt.extra().isEmpty()) opponentName = dt.extra();
+        setupToolbar(opponentName);
+        dt.ui.textView.set(R.id.chat_toolbar_title, opponentName);
         //endregion
 
-        // initialization of streams list
-        chatItem = new ArrayList<ChatItem>();
         // set the recycler view to inflate the list
-        recyclerView = (RecyclerView) findViewById(R.id.mRecylerView);
-        mLinearLayoutManager = new LinearLayoutManager(getApplicationContext());
-        adapter = new ChatListAdapter(dt, getApplicationContext(), chatItem);
+        recyclerView = (RecyclerView) findViewById(R.id.mRecyclerView);
+        adapter = new ChatListAdapter(dt, ChatActivity.this, chatItemArrayList);
+        mLinearLayoutManager = new LinearLayoutManager(ChatActivity.this);
+    }
 
-        recyclerView.setLayoutManager(mLinearLayoutManager);
-        recyclerView.setAdapter(adapter);
-        mLinearLayoutManager.setStackFromEnd(true);
+    public void sendChat(View view) {
+        etChat = dt.ui.editText.getRes(R.id.chat_edit_text);
+        mChat = dt.ui.editText.get(R.id.chat_edit_text);
+        if (!TextUtils.isEmpty(mChat)) {
+            if(isLogged){
+                mService.sendStanza(opponentName, Message.Type.chat, "chat", mChat);
+                etChat.setText("");
+            } else toast(getString(R.string.login_failed_message));
+        }
+    }
 
-        final EditText chat_edit_text = (EditText) findViewById(R.id.chat_edit_text);
-        ImageButton chat_send = (ImageButton) findViewById(R.id.chat_send);
-
-        chat_send.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mChat = chat_edit_text.getText().toString();
-                if (!mChat.isEmpty()) {
-                    mService.sendStanza(userName, Message.Type.chat, "chat", mChat);
-                    chat_edit_text.setText("");
-                }
+    public void xmppLogin() {
+        showDialog();
+        Count++;
+        if (Count % 4 == 0) {
+            // after 3rd attempt
+            Log.d("xmpp: ", "Login time out");
+            hideDialog();
+            onLoginFailed();
+        } else {
+            try {
+                mService.initConnection(username, password, new XmppService.onConnectionResponse() {
+                    @Override
+                    public void onConnected(boolean isConnected, XMPPConnection connection) {
+                        if(isConnected){
+                            mService.login(username, password, new XmppService.onLoginResponse() {
+                                @Override
+                                public void onLoggedIn(boolean isLogged) {
+                                    if(!isLogged) onLoginFailed();
+                                }
+                            });
+                        } else onLoginFailed();
+                    }
+                });
+                mService.connectConnection();
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.d("xmpp: ", "UI:: Login Error: " + e.getMessage());
+                xmppLogin();
             }
-        });
+        }
+    }
 
+    public void onLoginFailed() {
+        isLogged = false;
+        hideDialog();
+        toast(getString(R.string.login_failed_message));
     }
 
     // back button press method
@@ -147,5 +195,4 @@ public class ChatActivity extends BaseActivity {
     public void onBackPressed() {
         dt.tools.startActivity(ContactProfileActivity.class, dt.extra());
     }
-
 }

@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
-    android:id="@+id/chat_item_layout"
+    android:id="@+id/whole_chat_layout"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:clickable="true"
-    android:background="?attr/selectableItemBackground">
+    android:clickable="true">
 
     <LinearLayout
-        android:id="@+id/friend_chat"
+        android:id="@+id/friend_chat_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
@@ -46,7 +45,7 @@
                 android:gravity="center">
 
                 <TextView
-                    android:id="@+id/chat_user_without_image"
+                    android:id="@+id/friend_no_image"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:layout_gravity="center"
@@ -68,7 +67,7 @@
                 android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/chat_user_chat"
+                    android:id="@+id/friend_chat"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="chat from user"
@@ -80,6 +79,19 @@
                     android:textColor="@android:color/black"
                     android:textSize="14sp" />
 
+                <TextView
+                    android:id="@+id/friend_name"
+                    android:layout_below="@+id/friend_no_image"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="4dp"
+                    android:paddingRight="16dp"
+                    android:paddingBottom="2dp"
+                    android:paddingTop="2dp"
+                    android:text="friend name"
+                    android:visibility="gone"
+                    android:textSize="12sp" />
+
             </LinearLayout>
 
         </LinearLayout>
@@ -87,7 +99,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/my_chat"
+        android:id="@+id/my_chat_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
@@ -113,7 +125,7 @@
             android:textSize="12sp" />
 
         <TextView
-            android:id="@+id/my_user_chat"
+            android:id="@+id/my_chat"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="chat from user"

@@ -3,6 +3,7 @@ package anindya.sample.smackchat.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -14,6 +15,8 @@ import base.droidtool.activities.BaseActivity;
 
 
 public class ContactProfileActivity extends BaseActivity {
+
+    String opponentName = "";
 
     @Override
     public void onStart() {
@@ -50,10 +53,15 @@ public class ContactProfileActivity extends BaseActivity {
         super.initProgressDialog(getString(R.string.getting_ready));
 
         //region Load Record Using Extras
-        if (!dt.extra().isEmpty()) setupToolbar(dt.extra());
-        dt.ui.textView.set(R.id.contact_profile_toolbar_title, dt.extra());
-        dt.ui.textView.set(R.id.contact_fullname, dt.extra());
+        if (!dt.extra().isEmpty()) opponentName = dt.extra();
+        setupToolbar(opponentName);
+        dt.ui.textView.set(R.id.contact_profile_toolbar_title, opponentName);
+        dt.ui.textView.set(R.id.contact_fullname, opponentName);
         //endregion
+    }
+
+    public void goToChat(View view) {
+        dt.tools.startActivity(ChatActivity.class, opponentName);
     }
 
     // back button press method

@@ -11,6 +11,7 @@ public class ChatItem {
     public String chatMessageID;
     public String chatTimeStamp;
     public String chatUserName;
+    public boolean chatIsTapped;
 
     public Message.Type getChatMessageType() {
         return chatMessageType;
@@ -58,5 +59,13 @@ public class ChatItem {
 
     public void setChatUserName(String chatUserName) {
         this.chatUserName = chatUserName;
+    }
+
+    public boolean isChatIsTapped() {
+        return chatIsTapped;
+    }
+
+    public void setChatIsTapped(boolean chatIsTapped) {
+        this.chatIsTapped = chatIsTapped;
     }
 }

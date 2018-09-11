@@ -17,6 +17,9 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.chat.ChatManager;
+import org.jivesoftware.smack.chat.ChatManagerListener;
+import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.filter.MessageTypeFilter;
 import org.jivesoftware.smack.filter.StanzaFilter;
 import org.jivesoftware.smack.packet.Message;
@@ -58,6 +61,7 @@ import anindya.sample.smackchat.model.BroadcastEvent;
 import anindya.sample.smackchat.model.ChatEvent;
 import anindya.sample.smackchat.model.MyFriend;
 import anindya.sample.smackchat.model.Users;
+import base.droidtool.DroidTool;
 
 import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_ADDRESS;
 import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_PORT;
@@ -69,6 +73,7 @@ public class XmppManager {
     public Context mContext;
     public String userName, passWord;
     public AbstractXMPPConnection connection;
+    public ChatManager chatManager;
     public XMPPConnectionListener connectionListener = new XMPPConnectionListener();
     public List<MyFriend> friendList = new ArrayList<MyFriend>();
     StanzaListener mStanzaListener;
@@ -126,8 +131,11 @@ public class XmppManager {
         profileSetupResponse = listener;
     }
 
+    DroidTool dt;
+
     public XmppManager(Context context) {
         mContext = context;
+        dt = new DroidTool(context);
     }
 
     // connection Initialize
@@ -369,10 +377,8 @@ public class XmppManager {
             Log.d("xmpp: ", "BareJid create Failure: " + e.getMessage());
         }
 
-        Message message = new Message();
-        message.setFrom(connection.getUser());
-        message.setTo(jid);
-        message.setType(type);
+        Message message = new Message(jid, type);
+        message.setFrom(dt.pref.getString("username"));
         message.setSubject(subject);
         message.setBody(chat);
 
@@ -404,7 +410,8 @@ public class XmppManager {
             public void processStanza(Stanza packet) throws SmackException.NotConnectedException, InterruptedException, SmackException.NotLoggedInException {
                 Message message = (Message) packet;
                 if (message.getBody() != null) {
-                    String from = String.valueOf(message.getFrom());
+                    String sender = String.valueOf(message.getFrom());
+                    String from = sender.substring(0, sender.indexOf("@"));
                     //Get the extension from message
                     StandardExtensionElement messageTimeStamp = (StandardExtensionElement) message
                             .getExtension("urn:xmpp:timestamp");
@@ -421,7 +428,8 @@ public class XmppManager {
                         NotificationUtils notificationUtils = new NotificationUtils(mContext);
                         notificationUtils.showNotificationMessage(subject, body, "", resultIntent);
                     }*/
-                    EventBus.getDefault().postSticky(new BroadcastEvent(new ChatEvent(message.getType(), message.getSubject(), message.getBody(), message.getStanzaId(), timestamp, from)));
+                    Log.d("xmpp: ", "From: " + from + "\nTime: " + timestamp + "\nSubject: " + message.getSubject() + "\nMessage: " + message.getBody() + "\nMessage ID: " + message.getStanzaId());
+                    EventBus.getDefault().postSticky(new BroadcastEvent("chat", new ChatEvent(message.getType(), message.getSubject(), message.getBody(), message.getStanzaId(), timestamp, from)));
                 }
             }
         };
@@ -489,7 +497,8 @@ public class XmppManager {
         if (forwardedMessages != null) {
             if (forwardedMessages.size() > 0) {
                 for (Message message: forwardedMessages) {
-                    String from = String.valueOf(message.getFrom());
+                    String sender = String.valueOf(message.getFrom());
+                    String from = sender.substring(0, sender.indexOf("@"));
                     //Get the extension from message
                     StandardExtensionElement messageTimeStamp = (StandardExtensionElement) message.getExtension("urn:xmpp:timestamp");
                     String timestamp = "";
@@ -498,7 +507,8 @@ public class XmppManager {
                         long timestampOriginal = Long.parseLong(messageTimeStamp.getAttributeValue("timestamp"));
                         timestamp = convertDate(timestampOriginal, "dd-MMM-yyyy h:mm a");
                     }
-                    EventBus.getDefault().postSticky(new BroadcastEvent(new ChatEvent(message.getType(), message.getSubject(), message.getBody(), message.getStanzaId(), timestamp, from)));
+                    Log.d("xmpp: ", "From: " + from + "\nTime: " + timestamp + "\nSubject: " + message.getSubject() + "\nMessage: " + message.getBody() + "\nMessage ID: " + message.getStanzaId());
+                    EventBus.getDefault().postSticky(new BroadcastEvent("chat", new ChatEvent(message.getType(), message.getSubject(), message.getBody(), message.getStanzaId(), timestamp, from)));
                 }
             }
         }

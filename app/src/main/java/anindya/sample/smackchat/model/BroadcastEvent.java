@@ -18,6 +18,11 @@ public class BroadcastEvent {
     public BroadcastEvent(ChatEvent chatEvent) {
         this.chatEvent = chatEvent;
     }
+
+    public BroadcastEvent(String item, ChatEvent chatEvent) {
+        this.item = item;
+        this.chatEvent = chatEvent;
+    }
 }
 
 
