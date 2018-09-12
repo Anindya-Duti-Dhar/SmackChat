@@ -12,7 +12,7 @@ public class ChatEvent {
     public String from;
     public String timeStamp;
 
-    public ChatEvent(Message.Type type, String subject, String message, String messageID, String from, String timeStamp) {
+    public ChatEvent(Message.Type type, String subject, String message, String messageID, String timeStamp, String from) {
         this.type = type;
         this.subject = subject;
         this.message = message;

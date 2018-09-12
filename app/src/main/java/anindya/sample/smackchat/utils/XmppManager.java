@@ -428,7 +428,7 @@ public class XmppManager {
                         NotificationUtils notificationUtils = new NotificationUtils(mContext);
                         notificationUtils.showNotificationMessage(subject, body, "", resultIntent);
                     }*/
-                    Log.d("xmpp: ", "From: " + from + "\nTime: " + timestamp + "\nSubject: " + message.getSubject() + "\nMessage: " + message.getBody() + "\nMessage ID: " + message.getStanzaId());
+                    Log.d("xmpp: ", "From: " + message.getFrom() + "\nTime: " + timestamp + "\nSubject: " + message.getSubject() + "\nMessage: " + message.getBody() + "\nMessage ID: " + message.getStanzaId());
                     EventBus.getDefault().postSticky(new BroadcastEvent("chat", new ChatEvent(message.getType(), message.getSubject(), message.getBody(), message.getStanzaId(), timestamp, from)));
                 }
             }
@@ -507,7 +507,6 @@ public class XmppManager {
                         long timestampOriginal = Long.parseLong(messageTimeStamp.getAttributeValue("timestamp"));
                         timestamp = convertDate(timestampOriginal, "dd-MMM-yyyy h:mm a");
                     }
-                    Log.d("xmpp: ", "From: " + from + "\nTime: " + timestamp + "\nSubject: " + message.getSubject() + "\nMessage: " + message.getBody() + "\nMessage ID: " + message.getStanzaId());
                     EventBus.getDefault().postSticky(new BroadcastEvent("chat", new ChatEvent(message.getType(), message.getSubject(), message.getBody(), message.getStanzaId(), timestamp, from)));
                 }
             }

@@ -7,7 +7,10 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.text.format.DateFormat;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
@@ -57,13 +60,12 @@ public class ChatActivity extends BaseActivity {
 
     @Subscribe
     public void onMessageEvent(BroadcastEvent event) {
-        if(event.item.equals("login")){
+        if (event.item.equals("login")) {
             isLogged = true;
             mService.setUpReceiver();
             mService.receiveOldMessages(opponentName, new XmppService.onOldMessagesResponse() {
                 @Override
                 public void onReceived(List<Message> message) {
-                    mService.receiveStanza();
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -72,10 +74,11 @@ public class ChatActivity extends BaseActivity {
                             mLinearLayoutManager.setStackFromEnd(true);
                         }
                     });
+                    mService.receiveStanza();
                     hideDialog();
                 }
             });
-        } else if(event.item.equals("chat")) {
+        } else if (event.item.equals("chat")) {
             if (event.chatEvent.type == Message.Type.chat) {
                 if (event.chatEvent.subject.equals("chat")) {
                     addMessage(event.chatEvent.type, event.chatEvent.subject, event.chatEvent.message, event.chatEvent.messageID, event.chatEvent.timeStamp, event.chatEvent.from);
@@ -85,34 +88,34 @@ public class ChatActivity extends BaseActivity {
     }
 
     private void addMessage(Message.Type type, String subject, String message, String messageID, String timeStamp, String from) {
-                ChatItem chatItem = new ChatItem();
-                // check last message ID with last entered message ID in array list
-                if (!chatItemArrayList.isEmpty()) {
-                    if (chatItemArrayList.get(chatItemArrayList.size() - 1).getChatMessageID() != messageID) {
-                        chatItem.setChatMessageType(type);
-                        chatItem.setChatSubject(subject);
-                        chatItem.setChatText(message);
-                        chatItem.setChatMessageID(messageID);
-                        chatItem.setChatTimeStamp(timeStamp);
-                        chatItem.setChatUserName(from);
-                        chatItemArrayList.add(chatItem);
-                    }
-                } else {
-                    chatItem.setChatMessageType(type);
-                    chatItem.setChatSubject(subject);
-                    chatItem.setChatText(message);
-                    chatItem.setChatMessageID(messageID);
-                    chatItem.setChatTimeStamp(timeStamp);
-                    chatItem.setChatUserName(from);
-                    chatItemArrayList.add(chatItem);
-                }
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        adapter.notifyDataSetChanged();
-                        recyclerView.scrollToPosition(chatItemArrayList.size() - 1);
-                    }
-                });
+        ChatItem chatItem = new ChatItem();
+        // check last message ID with last entered message ID in array list
+        if (!chatItemArrayList.isEmpty()) {
+            if (chatItemArrayList.get(chatItemArrayList.size() - 1).getChatMessageID() != messageID) {
+                chatItem.setChatMessageType(type);
+                chatItem.setChatSubject(subject);
+                chatItem.setChatText(message);
+                chatItem.setChatMessageID(messageID);
+                chatItem.setChatTimeStamp(timeStamp);
+                chatItem.setChatUserName(from);
+                chatItemArrayList.add(chatItem);
+            }
+        } else {
+            chatItem.setChatMessageType(type);
+            chatItem.setChatSubject(subject);
+            chatItem.setChatText(message);
+            chatItem.setChatMessageID(messageID);
+            chatItem.setChatTimeStamp(timeStamp);
+            chatItem.setChatUserName(from);
+            chatItemArrayList.add(chatItem);
+        }
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                adapter.notifyDataSetChanged();
+                recyclerView.scrollToPosition(chatItemArrayList.size() - 1);
+            }
+        });
     }
 
 
@@ -133,6 +136,7 @@ public class ChatActivity extends BaseActivity {
         if (!dt.extra().isEmpty()) opponentName = dt.extra();
         setupToolbar(opponentName);
         dt.ui.textView.set(R.id.chat_toolbar_title, opponentName);
+        dt.ui.textView.set(R.id.chat_toolbar_no_image, String.valueOf(opponentName.charAt(0)));
         //endregion
 
         // set the recycler view to inflate the list
@@ -145,11 +149,24 @@ public class ChatActivity extends BaseActivity {
         etChat = dt.ui.editText.getRes(R.id.chat_edit_text);
         mChat = dt.ui.editText.get(R.id.chat_edit_text);
         if (!TextUtils.isEmpty(mChat)) {
-            if(isLogged){
+            if (isLogged) {
                 mService.sendStanza(opponentName, Message.Type.chat, "chat", mChat);
+                ChatItem chatItem = new ChatItem();
+                chatItem.setChatMessageType(Message.Type.chat);
+                chatItem.setChatSubject("chat");
+                chatItem.setChatText(mChat);
+                chatItem.setChatTimeStamp(convertDate(System.currentTimeMillis(), "dd-MMM-yyyy h:mm a"));
+                chatItem.setChatUserName(username);
+                chatItemArrayList.add(chatItem);
+                adapter.notifyDataSetChanged();
+                recyclerView.scrollToPosition(chatItemArrayList.size() - 1);
                 etChat.setText("");
             } else toast(getString(R.string.login_failed_message));
         }
+    }
+
+    public static String convertDate(Long dateInMilliseconds, String dateFormat) {
+        return DateFormat.format(dateFormat, dateInMilliseconds).toString();
     }
 
     public void xmppLogin() {
@@ -165,11 +182,11 @@ public class ChatActivity extends BaseActivity {
                 mService.initConnection(username, password, new XmppService.onConnectionResponse() {
                     @Override
                     public void onConnected(boolean isConnected, XMPPConnection connection) {
-                        if(isConnected){
+                        if (isConnected) {
                             mService.login(username, password, new XmppService.onLoginResponse() {
                                 @Override
                                 public void onLoggedIn(boolean isLogged) {
-                                    if(!isLogged) onLoginFailed();
+                                    if (!isLogged) onLoginFailed();
                                 }
                             });
                         } else onLoginFailed();
@@ -188,6 +205,24 @@ public class ChatActivity extends BaseActivity {
         isLogged = false;
         hideDialog();
         toast(getString(R.string.login_failed_message));
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.chat_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_profile:
+                dt.tools.startActivity(ContactProfileActivity.class, opponentName);
+                break;
+            default:
+                break;
+        }
+        return true;
     }
 
     // back button press method

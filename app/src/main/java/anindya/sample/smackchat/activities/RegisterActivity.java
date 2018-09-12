@@ -304,6 +304,7 @@ public class RegisterActivity extends BaseActivity {
                 Intent i = new Intent(RegisterActivity.this, LoginActivity.class);
                 startActivity(i);
                 finish();
+                //super.onBackPressed();
             }
 
             @Override

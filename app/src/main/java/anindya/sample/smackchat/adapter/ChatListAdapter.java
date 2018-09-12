@@ -80,6 +80,9 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHo
         TextView myChat = viewHolder.my_chat;
         final TextView myChatTimeStamp = viewHolder.my_chat_time_stamp;
 
+        Log.d("need: ", "Current user: "+dt.pref.getString("username"));
+        //Log.d("need: ", "From: " + data.getChatUserName() + "\nTime: " + data.getChatTimeStamp() + "\nSubject: " + data.getChatSubject() + "\nMessage: " + data.getChatText() + "\nMessage ID: " + data.getChatMessageID());
+
         if (data.getChatUserName().equals(dt.pref.getString("username"))) {
             friendChatLayout.setVisibility(View.GONE);
             myChatLayout.setVisibility(View.VISIBLE);

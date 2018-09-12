@@ -13,7 +13,8 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp"
         android:orientation="vertical"
         android:visibility="gone">
 
@@ -24,12 +25,10 @@
             android:paddingLeft="64dp"
             android:paddingRight="16dp"
             android:paddingBottom="2dp"
+            android:layout_gravity="left"
             android:paddingTop="2dp"
-            android:text="12.45 pm"
-            android:maxLines="1"
+            android:text="18-Mar-2018 12:45 pm"
             android:visibility="gone"
-            android:scrollHorizontally="true"
-            android:ellipsize="end"
             android:textSize="12sp" />
 
         <LinearLayout
@@ -70,11 +69,12 @@
                     android:id="@+id/friend_chat"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="chat from user"
+                    android:text="chat from friend"
                     android:paddingLeft="16dp"
                     android:paddingRight="16dp"
                     android:paddingBottom="8dp"
                     android:paddingTop="8dp"
+                    android:layout_gravity="left"
                     android:background="@drawable/friends_chat"
                     android:textColor="@android:color/black"
                     android:textSize="14sp" />
@@ -88,6 +88,7 @@
                     android:paddingRight="16dp"
                     android:paddingBottom="2dp"
                     android:paddingTop="2dp"
+                    android:layout_gravity="left"
                     android:text="friend name"
                     android:visibility="gone"
                     android:textSize="12sp" />
@@ -104,35 +105,35 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp"
         android:visibility="gone"
         android:layout_alignParentRight="true"
         android:orientation="vertical">
 
         <TextView
             android:id="@+id/my_chat_time_stamp"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingLeft="16dp"
             android:paddingRight="16dp"
             android:paddingBottom="2dp"
             android:paddingTop="2dp"
-            android:text="12.45 pm"
-            android:maxLines="1"
+            android:layout_gravity="right"
+            android:text="18-Mar-2018 12:45 pm"
             android:visibility="gone"
-            android:scrollHorizontally="true"
-            android:ellipsize="end"
             android:textSize="12sp" />
 
         <TextView
             android:id="@+id/my_chat"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="chat from user"
+            android:text="chat from currrent user"
             android:paddingLeft="16dp"
             android:paddingRight="16dp"
             android:paddingBottom="8dp"
             android:paddingTop="8dp"
+            android:layout_gravity="right"
             android:background="@drawable/my_chat"
             android:textColor="@android:color/white"
             android:textSize="14sp" />
