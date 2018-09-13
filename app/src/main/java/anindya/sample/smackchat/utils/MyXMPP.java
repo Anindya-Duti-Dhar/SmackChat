@@ -72,7 +72,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 
 import anindya.sample.smackchat.activities.SplashActivity;
-import anindya.sample.smackchat.model.ChatEvent;
+import anindya.sample.smackchat.model.ChatItem;
 import anindya.sample.smackchat.model.MyFriend;
 import anindya.sample.smackchat.model.Users;
 
@@ -656,7 +656,7 @@ public class MyXMPP {
 
         // Discover information about the room
         try {
-            manager.getRoomInfo(mucJid);
+            RoomInfo roomInfo = manager.getRoomInfo(mucJid);
         } catch (SmackException.NoResponseException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Room Info Error: " + e.getMessage());
@@ -909,7 +909,7 @@ public class MyXMPP {
                         }
 
                         Log.d("xmpp: ", "From: " + OnlyUserName + "\nTime: " + timestamp + "\nSubject: " + subject + "\nMessage: " + body + "\nMessage ID: " + messageID);
-                        EventBus.getDefault().postSticky(new ChatEvent(message.getType(), subject, body, messageID, timestamp, OnlyUserName));
+                        EventBus.getDefault().postSticky(new ChatItem(message.getType(), subject, body, messageID, timestamp, OnlyUserName, false));
                     }
                 }
             };

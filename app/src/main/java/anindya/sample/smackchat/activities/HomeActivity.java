@@ -14,9 +14,14 @@ import android.view.MenuItem;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.packet.Message;
+
+import java.util.List;
 
 import anindya.sample.smackchat.R;
 import anindya.sample.smackchat.fragments.FriendsFragment;
+import anindya.sample.smackchat.fragments.RoomFragment;
 import anindya.sample.smackchat.fragments.UserFragment;
 import anindya.sample.smackchat.model.BroadcastEvent;
 import anindya.sample.smackchat.services.XmppService;
@@ -27,32 +32,91 @@ public class HomeActivity extends BaseActivity {
     //Defining Variables
     public TabLayout tabLayout;
     public ViewPager viewPager;
+    boolean isLogged = false;
+    int Count = 0;
+
+    public onServiceGetListener serviceGetListener = null;
+
+    public interface onServiceGetListener {
+        void onServiceCreated();
+    }
+
+    public void setServiceResponse(onServiceGetListener listener){
+        serviceGetListener = listener;
+    }
+
+    public onLoginListener loginListener = null;
+
+    public interface onLoginListener {
+        void onLogged(boolean isSuccess);
+    }
+
+    public void setLoginResponse(onLoginListener listener){
+        loginListener = listener;
+    }
 
     @Override
     public void onStart() {
         super.onStart();
-        Intent mIntent = new Intent(this, XmppService.class);
-        bindService(mIntent, mConnection, BIND_AUTO_CREATE);
-        if(!EventBus.getDefault().isRegistered(this))EventBus.getDefault().register(this);
+        registerService(HomeActivity.this, new onServiceCreatedListener() {
+            @Override
+            public void onServiceCreated() {
+                xmppLogin();
+                if(serviceGetListener!=null)serviceGetListener.onServiceCreated();
+            }
+        });
     }
 
     @Override
     public void onDestroy() {
-        if (mBounded) {
-            unbindService(mConnection);
-            mBounded = false;
-        }
-        if(EventBus.getDefault().isRegistered(this))EventBus.getDefault().unregister(this);
+        unregisterService(HomeActivity.this);
         super.onDestroy();
     }
 
     @Subscribe
     public void onMessageEvent(BroadcastEvent event) {
-        Log.d("xmpp: ", "BroadcastEvent: " + event.item + "\nCategory: " + event.category + "\nMessage: " + event.message);
-        if(event.item.equals("login")){
+        if (event.item.equals("login")) {
+            isLogged = true;
             mService.setUpReceiver();
-            dt.tools.startActivity(HomeActivity.class, "");
+            if(loginListener!=null);loginListener.onLogged(true);
         }
+    }
+
+    public void xmppLogin() {
+        Count++;
+        if (Count % 4 == 0) {
+            // after 3rd attempt
+            Log.d("xmpp: ", "Login time out");
+            hideDialog();
+            onLoginFailed();
+        } else {
+            try {
+                mService.initConnection(username, password, new XmppService.onConnectionResponse() {
+                    @Override
+                    public void onConnected(boolean isConnected, XMPPConnection connection) {
+                        if (isConnected) {
+                            mService.login(username, password, new XmppService.onLoginResponse() {
+                                @Override
+                                public void onLoggedIn(boolean isLogged) {
+                                    if (!isLogged) onLoginFailed();
+                                }
+                            });
+                        } else onLoginFailed();
+                    }
+                });
+                mService.connectConnection();
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.d("xmpp: ", "UI:: Login Error: " + e.getMessage());
+                xmppLogin();
+            }
+        }
+    }
+
+    public void onLoginFailed() {
+        isLogged = false;
+        toast(getString(R.string.login_failed_message));
+        if(loginListener!=null);loginListener.onLogged(false);
     }
 
     @Override
@@ -178,7 +242,7 @@ public class HomeActivity extends BaseActivity {
                     UserFragment FragmentC = new UserFragment();
                     return FragmentC;
                 case 3:
-                    FriendsFragment FragmentD = new FriendsFragment();
+                    RoomFragment FragmentD = new RoomFragment();
                     return FragmentD;
                 case 4:
                     FriendsFragment FragmentE = new FriendsFragment();

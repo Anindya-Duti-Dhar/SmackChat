@@ -22,7 +22,6 @@ import java.util.ArrayList;
 
 import anindya.sample.smackchat.R;
 import anindya.sample.smackchat.adapter.ChatAdapter;
-import anindya.sample.smackchat.model.ChatEvent;
 import anindya.sample.smackchat.model.ChatItem;
 import anindya.sample.smackchat.services.ConnectXmpp;
 import base.droidtool.activities.BaseActivity;
@@ -30,50 +29,49 @@ import base.droidtool.activities.BaseActivity;
 
 public class Chat extends BaseActivity {
 
-    ArrayList<ChatItem> chatItem;
+    ArrayList<ChatItem> chatItemArrayList;
     RecyclerView mRecyclerView;
     ChatAdapter adapter;
     String userName;
     String mChat;
     LinearLayoutManager mLinearLayoutManager;
-    ChatItem chatListObject;
+    ChatItem chatItem;
 
     private BroadcastReceiver mBroadcastReceiver;
     private ProgressDialog mProgressDialog;
 
     @Subscribe
-    public void onMessageEvent(ChatEvent event) {
-        String chat = event.message;
-        String from = event.from;
-        String subject = event.subject;
-        String chatID = event.messageID;
-        Log.d("xmpp: ", "From: " + from + "\nSubject: " + subject + "\nChat: " + chat + "\nChat ID: " + chatID);
+    public void onMessageEvent(ChatItem event) {
+        String chat = event.chatText;
+        String from = event.chatUserName;
+        String subject = event.chatSubject;
+        String chatID = event.chatMessageID;
         addAMessage(from, chat, subject, chatID);
     }
 
     // add messages to the array list item from event bus
     private void addAMessage(String user, String message, String subject, String messageID) {
         if (subject.equals("comment")) {
-            chatListObject = new ChatItem();
+            chatItem = new ChatItem();
             // check last message ID with last entered message ID in array list
-            if (!chatItem.isEmpty()) {
-                if (chatItem.get(chatItem.size() - 1).getChatMessageID() != messageID) {
-                    chatListObject.setChatText(message);
-                    chatListObject.setChatUserName(user);
-                    chatListObject.setChatMessageID(messageID);
-                    chatItem.add(chatListObject);
+            if (!chatItemArrayList.isEmpty()) {
+                if (chatItemArrayList.get(chatItemArrayList.size() - 1).getChatMessageID() != messageID) {
+                    chatItem.setChatText(message);
+                    chatItem.setChatUserName(user);
+                    chatItem.setChatMessageID(messageID);
+                    chatItemArrayList.add(chatItem);
                 }
             } else {
-                chatListObject.setChatText(message);
-                chatListObject.setChatUserName(user);
-                chatListObject.setChatMessageID(messageID);
-                chatItem.add(chatListObject);
+                chatItem.setChatText(message);
+                chatItem.setChatUserName(user);
+                chatItem.setChatMessageID(messageID);
+                chatItemArrayList.add(chatItem);
             }
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     adapter.notifyDataSetChanged();
-                    mRecyclerView.scrollToPosition(chatItem.size() - 1);
+                    mRecyclerView.scrollToPosition(chatItemArrayList.size() - 1);
                 }
             });
         }
@@ -127,11 +125,11 @@ public class Chat extends BaseActivity {
         userName = dt.pref.getString("username");
 
         // initialization of streams list
-        chatItem = new ArrayList<ChatItem>();
+        chatItemArrayList = new ArrayList<ChatItem>();
         // set the recycler view to inflate the list
         mRecyclerView = (RecyclerView) findViewById(R.id.chat_list);
         mLinearLayoutManager = new LinearLayoutManager(getApplicationContext());
-        adapter = new ChatAdapter(dt, getApplicationContext(), chatItem);
+        adapter = new ChatAdapter(dt, getApplicationContext(), chatItemArrayList);
 
         joinChatRoom();
 

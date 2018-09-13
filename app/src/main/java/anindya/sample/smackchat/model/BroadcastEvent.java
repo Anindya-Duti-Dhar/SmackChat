@@ -7,7 +7,7 @@ public class BroadcastEvent {
     public String item;
     public String category;
     public String message;
-    public ChatEvent chatEvent;
+    public ChatItem chatItem;
 
     public BroadcastEvent(String item, String category, String message) {
         this.item = item;
@@ -15,13 +15,9 @@ public class BroadcastEvent {
         this.message = message;
     }
 
-    public BroadcastEvent(ChatEvent chatEvent) {
-        this.chatEvent = chatEvent;
-    }
-
-    public BroadcastEvent(String item, ChatEvent chatEvent) {
+    public BroadcastEvent(String item, ChatItem chatItem) {
         this.item = item;
-        this.chatEvent = chatEvent;
+        this.chatItem = chatItem;
     }
 }
 

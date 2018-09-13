@@ -79,9 +79,9 @@ public class ChatActivity extends BaseActivity {
                 }
             });
         } else if (event.item.equals("chat")) {
-            if (event.chatEvent.type == Message.Type.chat) {
-                if (event.chatEvent.subject.equals("chat")) {
-                    addMessage(event.chatEvent.type, event.chatEvent.subject, event.chatEvent.message, event.chatEvent.messageID, event.chatEvent.timeStamp, event.chatEvent.from);
+            if (event.chatItem.chatMessageType == Message.Type.chat) {
+                if (event.chatItem.chatSubject.equals("chat")) {
+                    addMessage(event.chatItem.chatMessageType, event.chatItem.chatSubject, event.chatItem.chatText, event.chatItem.chatMessageID, event.chatItem.chatTimeStamp, event.chatItem.chatUserName);
                 }
             }
         }

@@ -1,10 +1,7 @@
 package anindya.sample.smackchat.utils;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.AsyncTask;
-import android.os.Handler;
-import android.support.v4.content.LocalBroadcastManager;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.widget.Toast;
@@ -18,8 +15,6 @@ import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.chat.ChatManager;
-import org.jivesoftware.smack.chat.ChatManagerListener;
-import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.filter.MessageTypeFilter;
 import org.jivesoftware.smack.filter.StanzaFilter;
 import org.jivesoftware.smack.packet.Message;
@@ -34,12 +29,19 @@ import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 import org.jivesoftware.smackx.mam.MamManager;
+import org.jivesoftware.smackx.muc.HostedRoom;
+import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jivesoftware.smackx.muc.MultiUserChatException;
+import org.jivesoftware.smackx.muc.MultiUserChatManager;
+import org.jivesoftware.smackx.muc.RoomInfo;
 import org.jivesoftware.smackx.ping.PingFailedListener;
 import org.jivesoftware.smackx.ping.PingManager;
 import org.jivesoftware.smackx.receipts.DeliveryReceiptManager;
 import org.jivesoftware.smackx.receipts.ReceiptReceivedListener;
 import org.jivesoftware.smackx.vcardtemp.packet.VCard;
 import org.jxmpp.jid.DomainBareJid;
+import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.EntityFullJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Localpart;
@@ -55,14 +57,13 @@ import java.util.List;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 
-import anindya.sample.smackchat.R;
-import anindya.sample.smackchat.activities.SplashActivity;
 import anindya.sample.smackchat.model.BroadcastEvent;
-import anindya.sample.smackchat.model.ChatEvent;
+import anindya.sample.smackchat.model.ChatItem;
 import anindya.sample.smackchat.model.MyFriend;
-import anindya.sample.smackchat.model.Users;
+import anindya.sample.smackchat.model.RoomItem;
 import base.droidtool.DroidTool;
 
+import static anindya.sample.smackchat.utils.Const.CHAT_ROOM_SERVICE_NAME;
 import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_ADDRESS;
 import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_PORT;
 import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_SERVICE_NAME;
@@ -80,6 +81,8 @@ public class XmppManager {
     StanzaListener mChatStanzaListener;
     StanzaFilter filter;
     StanzaFilter mChatFilter;
+    MultiUserChatManager manager;
+    MultiUserChat multiUserChat;
 
     public onRegistrationResponse registrationResponse = null;
 
@@ -428,8 +431,7 @@ public class XmppManager {
                         NotificationUtils notificationUtils = new NotificationUtils(mContext);
                         notificationUtils.showNotificationMessage(subject, body, "", resultIntent);
                     }*/
-                    Log.d("xmpp: ", "From: " + message.getFrom() + "\nTime: " + timestamp + "\nSubject: " + message.getSubject() + "\nMessage: " + message.getBody() + "\nMessage ID: " + message.getStanzaId());
-                    EventBus.getDefault().postSticky(new BroadcastEvent("chat", new ChatEvent(message.getType(), message.getSubject(), message.getBody(), message.getStanzaId(), timestamp, from)));
+                    EventBus.getDefault().postSticky(new BroadcastEvent("chat", new ChatItem(message.getType(), message.getSubject(), message.getBody(), message.getStanzaId(), timestamp, from, false)));
                 }
             }
         };
@@ -507,12 +509,110 @@ public class XmppManager {
                         long timestampOriginal = Long.parseLong(messageTimeStamp.getAttributeValue("timestamp"));
                         timestamp = convertDate(timestampOriginal, "dd-MMM-yyyy h:mm a");
                     }
-                    EventBus.getDefault().postSticky(new BroadcastEvent("chat", new ChatEvent(message.getType(), message.getSubject(), message.getBody(), message.getStanzaId(), timestamp, from)));
+                    EventBus.getDefault().postSticky(new BroadcastEvent("chat", new ChatItem(message.getType(), message.getSubject(), message.getBody(), message.getStanzaId(), timestamp, from, false)));
                 }
             }
         }
         if(oldMessagesResponse!=null)oldMessagesResponse.onReceived(forwardedMessages);
     }
+
+    public onRoomLoadResponse roomLoadResponse = null;
+
+    public interface onRoomLoadResponse {
+        void onLoad(List<HostedRoom> hostedRoomList);
+    }
+
+    public void setRoomLoadResponseListener(onRoomLoadResponse listener) {
+        roomLoadResponse = listener;
+    }
+
+    public void getRoomList(){
+        manager = MultiUserChatManager.getInstanceFor(connection);
+        List<HostedRoom> hostedRoomList = null;
+
+        DomainBareJid serviceName = null;
+        try {
+            serviceName = JidCreate.domainBareFrom(CHAT_ROOM_SERVICE_NAME+CHAT_SERVER_SERVICE_NAME);
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "service name error: " + e.getMessage());
+            if(roomLoadResponse!=null)roomLoadResponse.onLoad(hostedRoomList);
+        }
+
+        try {
+            hostedRoomList = manager.getHostedRooms(serviceName);
+        } catch (SmackException.NoResponseException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Get Hosted Rooms list error: " + e.getMessage());
+            if(roomLoadResponse!=null)roomLoadResponse.onLoad(hostedRoomList);
+        } catch (XMPPException.XMPPErrorException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Get Hosted Rooms list error: " + e.getMessage());
+            if(roomLoadResponse!=null)roomLoadResponse.onLoad(hostedRoomList);
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Get Hosted Rooms list error: " + e.getMessage());
+            if(roomLoadResponse!=null)roomLoadResponse.onLoad(hostedRoomList);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Get Hosted Rooms list error: " + e.getMessage());
+            if(roomLoadResponse!=null)roomLoadResponse.onLoad(hostedRoomList);
+        } catch (MultiUserChatException.NotAMucServiceException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Get Hosted Rooms list error: " + e.getMessage());
+            if(roomLoadResponse!=null)roomLoadResponse.onLoad(hostedRoomList);
+        }
+
+        if (hostedRoomList != null) {
+            for (HostedRoom room: hostedRoomList) {
+                Log.d("xmpp: ", "Room Name: " + room.getName() + "\nRoom JID: " + room.getJid());
+            }
+            if(roomLoadResponse!=null)roomLoadResponse.onLoad(hostedRoomList);
+        }
+    }
+
+    public RoomItem getRoomInfo(String roomName) {
+        manager = MultiUserChatManager.getInstanceFor(connection);
+        RoomItem roomItem = null;
+        EntityBareJid mucJid = null;
+        try {
+            mucJid = (EntityBareJid) JidCreate.bareFrom(roomName + "@" + CHAT_ROOM_SERVICE_NAME + CHAT_SERVER_SERVICE_NAME);
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "EntityBareJid error: " + e.getMessage());
+        }
+        multiUserChat = manager.getMultiUserChat(mucJid);
+        try {
+            RoomInfo roomInfo = manager.getRoomInfo(mucJid);
+            roomItem = new RoomItem();
+            //roomItem.setOwner(String.valueOf(multiUserChat.getOwners().get(0).getNick()));
+            roomItem.setSubject(multiUserChat.getSubject());
+            roomItem.setDescription(roomInfo.getDescription());
+            roomItem.setNick(String.valueOf(multiUserChat.getNickname()));
+            roomItem.setOccupantsCount(multiUserChat.getOccupantsCount());
+            List<EntityFullJid> fullJidList = multiUserChat.getOccupants();
+            List<String> occupants = new ArrayList<String>();
+            for (EntityFullJid jid: fullJidList) {
+                occupants.add(String.valueOf(jid));
+            }
+            roomItem.setOccupants(occupants);
+        } catch (SmackException.NoResponseException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Room Info Error: " + e.getMessage());
+        } catch (XMPPException.XMPPErrorException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Room Info Error: " + e.getMessage());
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Room Info Error: " + e.getMessage());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Room Info Error: " + e.getMessage());
+        }
+
+        return roomItem;
+    }
+
 
     public static String convertDate(Long dateInMilliseconds, String dateFormat) {
         return DateFormat.format(dateFormat, dateInMilliseconds).toString();

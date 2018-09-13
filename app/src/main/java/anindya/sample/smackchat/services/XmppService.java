@@ -12,10 +12,12 @@ import android.util.Log;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smackx.muc.HostedRoom;
 
 import java.util.List;
 
 import anindya.sample.smackchat.model.MyFriend;
+import anindya.sample.smackchat.model.RoomItem;
 import anindya.sample.smackchat.model.Users;
 import anindya.sample.smackchat.utils.LocalBinder;
 import anindya.sample.smackchat.utils.XmppManager;
@@ -171,6 +173,25 @@ public class XmppService extends Service {
             }
         });
         xmppManager.getOldMessages(username);
+    }
+
+    public interface onRoomLoadResponse {
+        void onLoad(List<HostedRoom> hostedRoomList);
+    }
+
+    public void getRoomList(onRoomLoadResponse listener){
+        final onRoomLoadResponse roomLoadResponse = listener;
+        xmppManager.setRoomLoadResponseListener(new XmppManager.onRoomLoadResponse() {
+            @Override
+            public void onLoad(List<HostedRoom> hostedRoomList) {
+                if(roomLoadResponse!=null)roomLoadResponse.onLoad(hostedRoomList);
+            }
+        });
+        xmppManager.getRoomList();
+    }
+
+    public RoomItem getRoomInfo(String roomName){
+        return xmppManager.getRoomInfo(roomName);
     }
 
     @Override

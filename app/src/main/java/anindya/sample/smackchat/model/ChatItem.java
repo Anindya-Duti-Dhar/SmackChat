@@ -13,6 +13,19 @@ public class ChatItem {
     public String chatUserName;
     public boolean chatIsTapped;
 
+    public ChatItem(Message.Type chatMessageType, String chatSubject, String chatText, String chatMessageID, String chatTimeStamp, String chatUserName, boolean chatIsTapped) {
+        this.chatMessageType = chatMessageType;
+        this.chatSubject = chatSubject;
+        this.chatText = chatText;
+        this.chatMessageID = chatMessageID;
+        this.chatTimeStamp = chatTimeStamp;
+        this.chatUserName = chatUserName;
+        this.chatIsTapped = chatIsTapped;
+    }
+
+    public ChatItem() {
+    }
+
     public Message.Type getChatMessageType() {
         return chatMessageType;
     }
