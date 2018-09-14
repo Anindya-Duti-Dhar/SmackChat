@@ -23,7 +23,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="No User Found"
+                android:text="No Group Found"
                 android:layout_centerInParent="true"
                 android:textSize="18sp"
                 android:textColor="@color/soft_red"

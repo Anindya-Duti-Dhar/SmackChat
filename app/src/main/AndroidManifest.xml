@@ -62,6 +62,9 @@
         <activity android:name=".activities.ChatActivity"
             android:theme="@style/AppTheme.NoActionBar"/>
 
+        <activity android:name=".activities.GroupChatActivity"
+            android:theme="@style/AppTheme.NoActionBar"/>
+
         <receiver android:name=".utils.BootCompletedIntentReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

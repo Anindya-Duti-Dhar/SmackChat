@@ -7,7 +7,6 @@ public class RoomItem {
 
     public String jid;
     public String name;
-    public String subject;
     public String owner;
     public String nick;
     public String description;
@@ -28,14 +27,6 @@ public class RoomItem {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getSubject() {
-        return subject;
-    }
-
-    public void setSubject(String subject) {
-        this.subject = subject;
     }
 
     public String getOwner() {

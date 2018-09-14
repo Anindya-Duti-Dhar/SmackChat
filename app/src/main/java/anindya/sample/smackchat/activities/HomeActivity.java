@@ -1,7 +1,8 @@
 package anindya.sample.smackchat.activities;
 
-import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -11,29 +12,28 @@ import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 
-import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.packet.Message;
-
-import java.util.List;
 
 import anindya.sample.smackchat.R;
 import anindya.sample.smackchat.fragments.FriendsFragment;
 import anindya.sample.smackchat.fragments.RoomFragment;
 import anindya.sample.smackchat.fragments.UserFragment;
 import anindya.sample.smackchat.model.BroadcastEvent;
+import anindya.sample.smackchat.model.RoomItem;
 import anindya.sample.smackchat.services.XmppService;
 import base.droidtool.activities.BaseActivity;
 
 public class HomeActivity extends BaseActivity {
 
-    //Defining Variables
     public TabLayout tabLayout;
     public ViewPager viewPager;
-    boolean isLogged = false;
-    int Count = 0;
+    public boolean isLogged = false;
+    public FloatingActionButton mFab;
+    private int selectedPage = 2;
 
     public onServiceGetListener serviceGetListener = null;
 
@@ -78,18 +78,11 @@ public class HomeActivity extends BaseActivity {
         if (event.item.equals("login")) {
             isLogged = true;
             mService.setUpReceiver();
-            if(loginListener!=null);loginListener.onLogged(true);
+            if(loginListener!=null)loginListener.onLogged(true);
         }
     }
 
     public void xmppLogin() {
-        Count++;
-        if (Count % 4 == 0) {
-            // after 3rd attempt
-            Log.d("xmpp: ", "Login time out");
-            hideDialog();
-            onLoginFailed();
-        } else {
             try {
                 mService.initConnection(username, password, new XmppService.onConnectionResponse() {
                     @Override
@@ -108,15 +101,24 @@ public class HomeActivity extends BaseActivity {
             } catch (Exception e) {
                 e.printStackTrace();
                 Log.d("xmpp: ", "UI:: Login Error: " + e.getMessage());
-                xmppLogin();
+                onLoginFailed();
             }
-        }
     }
 
     public void onLoginFailed() {
         isLogged = false;
         toast(getString(R.string.login_failed_message));
         if(loginListener!=null);loginListener.onLogged(false);
+    }
+
+    public onRoomRefreshResponse roomRefreshResponse = null;
+
+    public interface onRoomRefreshResponse {
+        void onRefresh();
+    }
+
+    public void setRoomRefreshResponseListener(onRoomRefreshResponse listener) {
+        roomRefreshResponse = listener;
     }
 
     @Override
@@ -127,6 +129,44 @@ public class HomeActivity extends BaseActivity {
         super.register(this, "");
         super.setStatusBarColor(getResources().getColor(R.color.contact_profile_darkBlue));
         super.initProgressDialog(getString(R.string.getting_ready));
+
+        mFab = (FloatingActionButton)findViewById(R.id.add);
+
+        mFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(selectedPage == 3){
+                    View view = dt.ui.modal.showModalDialog(R.layout.bottom_sheet_room_create);
+                    dt.setModalView(view);
+                    dt.ui.fab.get(R.id.fab).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            dt.ui.modal.mBottomSheetDialog.dismiss();
+                            dt.setModalView(null);
+                        }
+                    });
+                    Button go = (Button)view.findViewById(R.id.bt_go);
+                    go.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            getCurrentUserInfo();
+                            RoomItem roomItem = new RoomItem();
+                            roomItem.setName(dt.ui.editText.get(R.id.et_name));
+                            roomItem.setDescription(dt.ui.editText.get(R.id.et_description));
+                            roomItem.setNick(username);
+                            mService.createRoom(roomItem, true, new XmppService.onRoomCreateResponse() {
+                                @Override
+                                public void onCreated(boolean isCreated) {
+                                        dt.ui.modal.mBottomSheetDialog.dismiss();
+                                        dt.setModalView(null);
+                                        if(roomRefreshResponse!=null)roomRefreshResponse.onRefresh();
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+        });
 
         // initialize tab layout with tab icon
         tabLayout = (TabLayout) findViewById(R.id.tabs);
@@ -159,14 +199,13 @@ public class HomeActivity extends BaseActivity {
                 // set the current item for which tab is selected
                 viewPager.setCurrentItem(tab.getPosition());
                 // animate fab button when new tab selected
-                /*fab.hide();
-                handler.postDelayed(new Runnable() {
+                mFab.hide();
+                new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        //Do something after 100ms
-                        fab.show();
+                        mFab.show();
                     }
-                }, 200);*/
+                }, 200);
             }
 
             @Override
@@ -186,30 +225,9 @@ public class HomeActivity extends BaseActivity {
 
             @Override
             public void onPageSelected(int position) {
+                selectedPage = position;
                 if (position == 0) {
-                    // do something when view pager appeared
-                    // Set title bar
                     //((MainActivity) getActivity()).setActionBarTitle(getActivity().getString(R.string.all_feeds_toolbar));
-                }
-                if (position == 1) {
-                    // do something when view pager appeared
-                    // Set title bar
-                    //((MainActivity) getActivity()).setActionBarTitle(getActivity().getString(R.string.friends_feeds_toolbar));
-                }
-                if (position == 2) {
-                    // do something when view pager appeared
-                    // Set title bar
-                    //setActionBarTitle(getString(R.string.profile_toolbar));
-                }
-                if (position == 3) {
-                    // do something when view pager appeared
-                    // Set title bar
-                    // ((MainActivity) getActivity()).setActionBarTitle(getActivity().getString(R.string.profile_toolbar));
-                }
-                if (position == 4) {
-                    // do something when view pager appeared
-                    // Set title bar
-                    // ((MainActivity) getActivity()).setActionBarTitle(getActivity().getString(R.string.profile_toolbar));
                 }
             }
 

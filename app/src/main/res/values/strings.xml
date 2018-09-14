@@ -25,6 +25,8 @@
     <string name="xmpp_connection_error">XMPP Connection Error!</string>
     <string name="thanks">Thanks</string>
     <string name="empty_string"></string>
+    <string name="name">Name</string>
+    <string name="description">Description</string>
     <!--Login Screen end-->
     <string name="try_again">Try again</string>
 
@@ -36,6 +38,7 @@
     <string name="repeat_password">Repeat Password</string>
     <string name="next">NEXT</string>
     <string name="register">REGISTER</string>
+    <string name="room">Group</string>
 
     <!--Droid Tool-->
     <string name="yes">Yes</string>

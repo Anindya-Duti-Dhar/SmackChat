@@ -39,12 +39,14 @@ import org.jivesoftware.smackx.ping.PingManager;
 import org.jivesoftware.smackx.receipts.DeliveryReceiptManager;
 import org.jivesoftware.smackx.receipts.ReceiptReceivedListener;
 import org.jivesoftware.smackx.vcardtemp.packet.VCard;
+import org.jivesoftware.smackx.xdata.Form;
 import org.jxmpp.jid.DomainBareJid;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.EntityFullJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Localpart;
+import org.jxmpp.jid.parts.Resourcepart;
 import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.io.IOException;
@@ -77,10 +79,8 @@ public class XmppManager {
     public ChatManager chatManager;
     public XMPPConnectionListener connectionListener = new XMPPConnectionListener();
     public List<MyFriend> friendList = new ArrayList<MyFriend>();
-    StanzaListener mStanzaListener;
-    StanzaListener mChatStanzaListener;
-    StanzaFilter filter;
-    StanzaFilter mChatFilter;
+    StanzaListener mChatStanzaListener, mChatStanzaListener2;
+    StanzaFilter mChatFilter, mChatFilter2;
     MultiUserChatManager manager;
     MultiUserChat multiUserChat;
 
@@ -498,7 +498,7 @@ public class XmppManager {
         List<Message> forwardedMessages = mamQueryResult.getMessages();
         if (forwardedMessages != null) {
             if (forwardedMessages.size() > 0) {
-                for (Message message: forwardedMessages) {
+                for (Message message : forwardedMessages) {
                     String sender = String.valueOf(message.getFrom());
                     String from = sender.substring(0, sender.indexOf("@"));
                     //Get the extension from message
@@ -513,7 +513,7 @@ public class XmppManager {
                 }
             }
         }
-        if(oldMessagesResponse!=null)oldMessagesResponse.onReceived(forwardedMessages);
+        if (oldMessagesResponse != null) oldMessagesResponse.onReceived(forwardedMessages);
     }
 
     public onRoomLoadResponse roomLoadResponse = null;
@@ -526,17 +526,17 @@ public class XmppManager {
         roomLoadResponse = listener;
     }
 
-    public void getRoomList(){
+    public void getRoomList() {
         manager = MultiUserChatManager.getInstanceFor(connection);
         List<HostedRoom> hostedRoomList = null;
 
         DomainBareJid serviceName = null;
         try {
-            serviceName = JidCreate.domainBareFrom(CHAT_ROOM_SERVICE_NAME+CHAT_SERVER_SERVICE_NAME);
+            serviceName = JidCreate.domainBareFrom(CHAT_ROOM_SERVICE_NAME + CHAT_SERVER_SERVICE_NAME);
         } catch (XmppStringprepException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "service name error: " + e.getMessage());
-            if(roomLoadResponse!=null)roomLoadResponse.onLoad(hostedRoomList);
+            if (roomLoadResponse != null) roomLoadResponse.onLoad(hostedRoomList);
         }
 
         try {
@@ -544,30 +544,30 @@ public class XmppManager {
         } catch (SmackException.NoResponseException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Get Hosted Rooms list error: " + e.getMessage());
-            if(roomLoadResponse!=null)roomLoadResponse.onLoad(hostedRoomList);
+            if (roomLoadResponse != null) roomLoadResponse.onLoad(hostedRoomList);
         } catch (XMPPException.XMPPErrorException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Get Hosted Rooms list error: " + e.getMessage());
-            if(roomLoadResponse!=null)roomLoadResponse.onLoad(hostedRoomList);
+            if (roomLoadResponse != null) roomLoadResponse.onLoad(hostedRoomList);
         } catch (SmackException.NotConnectedException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Get Hosted Rooms list error: " + e.getMessage());
-            if(roomLoadResponse!=null)roomLoadResponse.onLoad(hostedRoomList);
+            if (roomLoadResponse != null) roomLoadResponse.onLoad(hostedRoomList);
         } catch (InterruptedException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Get Hosted Rooms list error: " + e.getMessage());
-            if(roomLoadResponse!=null)roomLoadResponse.onLoad(hostedRoomList);
+            if (roomLoadResponse != null) roomLoadResponse.onLoad(hostedRoomList);
         } catch (MultiUserChatException.NotAMucServiceException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Get Hosted Rooms list error: " + e.getMessage());
-            if(roomLoadResponse!=null)roomLoadResponse.onLoad(hostedRoomList);
+            if (roomLoadResponse != null) roomLoadResponse.onLoad(hostedRoomList);
         }
 
         if (hostedRoomList != null) {
-            for (HostedRoom room: hostedRoomList) {
+            for (HostedRoom room : hostedRoomList) {
                 Log.d("xmpp: ", "Room Name: " + room.getName() + "\nRoom JID: " + room.getJid());
             }
-            if(roomLoadResponse!=null)roomLoadResponse.onLoad(hostedRoomList);
+            if (roomLoadResponse != null) roomLoadResponse.onLoad(hostedRoomList);
         }
     }
 
@@ -585,15 +585,14 @@ public class XmppManager {
         try {
             RoomInfo roomInfo = manager.getRoomInfo(mucJid);
             roomItem = new RoomItem();
-            //roomItem.setOwner(String.valueOf(multiUserChat.getOwners().get(0).getNick()));
-            roomItem.setSubject(multiUserChat.getSubject());
+            roomItem.setOwner(String.valueOf(multiUserChat.getOwners().get(0).getNick()));
             roomItem.setDescription(roomInfo.getDescription());
             roomItem.setNick(String.valueOf(multiUserChat.getNickname()));
-            roomItem.setOccupantsCount(multiUserChat.getOccupantsCount());
+            roomItem.setOccupantsCount(roomInfo.getOccupantsCount());
             List<EntityFullJid> fullJidList = multiUserChat.getOccupants();
             List<String> occupants = new ArrayList<String>();
-            for (EntityFullJid jid: fullJidList) {
-                occupants.add(String.valueOf(jid));
+            for (EntityFullJid jid : fullJidList) {
+                occupants.add(String.valueOf(jid)); //gggg@conference.desktop-r1pbkha/duti
             }
             roomItem.setOccupants(occupants);
         } catch (SmackException.NoResponseException e) {
@@ -609,10 +608,258 @@ public class XmppManager {
             e.printStackTrace();
             Log.d("xmpp: ", "Room Info Error: " + e.getMessage());
         }
-
         return roomItem;
     }
 
+    public onRoomCreateResponse roomCreateResponse = null;
+
+    public interface onRoomCreateResponse {
+        void onCreated(boolean isCreated);
+    }
+
+    public void setRoomCreateResponseListener(onRoomCreateResponse listener) {
+        roomCreateResponse = listener;
+    }
+
+    public void createRoom(RoomItem roomItem, boolean isPublic) {
+        if (connection.isConnected() == true) {
+            manager = MultiUserChatManager.getInstanceFor(connection);
+            EntityBareJid mucJid = null;
+            try {
+                mucJid = (EntityBareJid) JidCreate.bareFrom(roomItem.getName() + "@" + CHAT_ROOM_SERVICE_NAME + CHAT_SERVER_SERVICE_NAME);
+            } catch (XmppStringprepException e) {
+                e.printStackTrace();
+                Log.d("xmpp: ", "EntityBareJid error: " + e.getMessage());
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            }
+
+            Resourcepart nickname = null;
+            try {
+                nickname = Resourcepart.from(roomItem.getNick());
+            } catch (XmppStringprepException e) {
+                e.printStackTrace();
+                Log.d("xmpp: ", "Resourcepart error: " + e.getMessage());
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            }
+
+            multiUserChat = manager.getMultiUserChat(mucJid);
+            try {
+                multiUserChat.create(nickname);
+            } catch (SmackException.NoResponseException e) {
+                e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Create Error: " + e.getMessage());
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            } catch (XMPPException.XMPPErrorException e) {
+                e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Create Error: " + e.getMessage());
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Create Error: " + e.getMessage());
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            } catch (MultiUserChatException.MucAlreadyJoinedException e) {
+                e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Create Error: " + e.getMessage());
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Create Error: " + e.getMessage());
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            } catch (MultiUserChatException.MissingMucCreationAcknowledgeException e) {
+                e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Create Error: " + e.getMessage());
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            } catch (MultiUserChatException.NotAMucServiceException e) {
+                e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Create Error: " + e.getMessage());
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            }
+
+            Form form = null;
+            try {
+                form = multiUserChat.getConfigurationForm();
+            } catch (SmackException.NoResponseException e) {
+                e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Configuration Error: " + e.getMessage());
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            } catch (XMPPException.XMPPErrorException e) {
+                e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Configuration Error: " + e.getMessage());
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Configuration Error: " + e.getMessage());
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Configuration Error: " + e.getMessage());
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            }
+
+            Form answerForm = form.createAnswerForm();
+            if(isPublic){
+                answerForm.getField("muc#roomconfig_publicroom").addValue("1");
+                answerForm.getField("muc#roomconfig_enablelogging").addValue("1");
+            }
+            else {
+                answerForm.getField("muc#roomconfig_publicroom").addValue("0");
+                answerForm.getField("muc#roomconfig_enablelogging").addValue("0");
+            }
+            answerForm.getField("muc#roomconfig_persistentroom").addValue("1");
+            answerForm.setAnswer("muc#roomconfig_roomdesc", roomItem.getDescription());
+            answerForm.getField("muc#roomconfig_roomowners").addValue(roomItem.getNick() + "@" + CHAT_SERVER_SERVICE_NAME);
+            answerForm.getField("muc#roomconfig_roomadmins").addValue(roomItem.getNick() + "@" + CHAT_SERVER_SERVICE_NAME);
+
+            try {
+                multiUserChat.sendConfigurationForm(answerForm);
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            } catch (SmackException.NoResponseException e) {
+                e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Configuration Error: " + e.getMessage());
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            } catch (XMPPException.XMPPErrorException e) {
+                e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Configuration Error: " + e.getMessage());
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Configuration Error: " + e.getMessage());
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                Log.d("xmpp: ", "Chat Room Configuration Error: " + e.getMessage());
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            }
+
+            try {
+                RoomInfo roomInfo = manager.getRoomInfo(mucJid);
+                if (roomInfo != null) {
+                    if (roomCreateResponse != null) roomCreateResponse.onCreated(true);
+                } else {
+                    if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+                }
+            } catch (SmackException.NoResponseException e) {
+                e.printStackTrace();
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            } catch (XMPPException.XMPPErrorException e) {
+                e.printStackTrace();
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                if (roomCreateResponse != null) roomCreateResponse.onCreated(false);
+            }
+        }
+    }
+
+    public void joinChatRoom(String userName, String roomName) {
+        manager = MultiUserChatManager.getInstanceFor(connection);
+
+        EntityBareJid mucJid = null;
+        try {
+            mucJid = (EntityBareJid) JidCreate.bareFrom(roomName + "@" + CHAT_ROOM_SERVICE_NAME + CHAT_SERVER_SERVICE_NAME);
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "EntityBareJid error: " + e.getMessage());
+        }
+
+        Resourcepart nickname = null;
+        try {
+            nickname = Resourcepart.from(userName);
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Resourcepart error: " + e.getMessage());
+        }
+
+        multiUserChat = manager.getMultiUserChat(mucJid);
+        try {
+            multiUserChat.join(nickname);
+        } catch (SmackException.NoResponseException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Chat room join Error: " + e.getMessage());
+        } catch (XMPPException.XMPPErrorException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Chat room join Error: " + e.getMessage());
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Chat room join Error: " + e.getMessage());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Chat room join Error: " + e.getMessage());
+        } catch (MultiUserChatException.NotAMucServiceException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Chat room join Error: " + e.getMessage());
+        }
+
+        // if user joined successfully
+        if (multiUserChat.isJoined()) {
+            Log.d("xmpp: ", "Chat room join success");
+            if(roomJoinResponse!=null)roomJoinResponse.onJoin(true);
+        } else {
+            Log.d("xmpp: ", "Chat room join failed");
+            if(roomJoinResponse!=null)roomJoinResponse.onJoin(false);
+        }
+    }
+
+    public onRoomJoinResponse roomJoinResponse = null;
+
+    public interface onRoomJoinResponse {
+        void onJoin(boolean isJoined);
+    }
+
+    public void setRoomJoinResponseListener(onRoomJoinResponse listener) {
+        roomJoinResponse = listener;
+    }
+
+    public void receiveGroupMessages() {
+            mChatFilter2 = MessageTypeFilter.GROUPCHAT;
+            mChatStanzaListener2 = new StanzaListener() {
+                @Override
+                public void processStanza(Stanza packet) throws SmackException.NotConnectedException, InterruptedException, SmackException.NotLoggedInException {
+                    Message message = (Message) packet;
+                    if (message.getBody() != null) {
+                        String sender = String.valueOf(message.getFrom());
+                        String from = sender.substring(sender.indexOf("/")+1, sender.length());
+                        //Get the extension from message
+                        StandardExtensionElement messageTimeStamp = (StandardExtensionElement) message
+                                .getExtension("urn:xmpp:timestamp");
+                        String timestamp = "";
+                        //Get the value from extension
+                        if(messageTimeStamp!=null) {
+                            long timestampOriginal = Long.parseLong(messageTimeStamp.getAttributeValue("timestamp"));
+                            timestamp = convertDate(timestampOriginal, "dd-MMM-yyyy h:mm a");
+                        }
+                        EventBus.getDefault().postSticky(new BroadcastEvent("groupchat", new ChatItem(message.getType(), message.getSubject(), message.getBody(), message.getStanzaId(), timestamp, from, false)));
+                    }
+                }
+            };
+            connection.addSyncStanzaListener(mChatStanzaListener2, mChatFilter2);
+    }
+
+    public void sendGroupChat(Message.Type type, String subject, String chat) {
+        Message message = new Message();
+        message.setBody(chat);
+        message.setType(type);
+        message.setSubject(subject);
+
+        //Creating Standard packet extension with name as 'timestamp' and urn as 'urn:xmpp:timestamp'
+        StandardExtensionElement messageTimeStamp = StandardExtensionElement.builder(
+                "timestamp", "urn:xmpp:timestamp")
+                .addAttribute("timestamp", String.valueOf(System.currentTimeMillis()))  //Setting value in extension
+                .build();
+        message.addExtension(messageTimeStamp);
+        try {
+            multiUserChat.sendMessage(message);
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Message send Error: " + e.getMessage());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Message send Error: " + e.getMessage());
+        }
+    }
 
     public static String convertDate(Long dateInMilliseconds, String dateFormat) {
         return DateFormat.format(dateFormat, dateInMilliseconds).toString();

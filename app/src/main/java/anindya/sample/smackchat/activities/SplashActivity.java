@@ -88,11 +88,11 @@ public class SplashActivity extends BaseActivity {
             public void run() {
                 if (dt.pref.getBoolean("login")) {
                     if(dt.droidNet.hasConnection()){
-                        showDialog();
+                        //showDialog();
                         xmppLogin();
                     }
                     else {
-                        hideDialog();
+                        //hideDialog();
                         dt.droidNet.internetErrorDialog();
                     }
                 } else {
@@ -133,7 +133,7 @@ public class SplashActivity extends BaseActivity {
     }
 
     public void loginFailed(){
-        hideDialog();
+        //hideDialog();
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {

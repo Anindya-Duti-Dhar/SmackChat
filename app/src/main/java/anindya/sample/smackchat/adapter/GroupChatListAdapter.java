@@ -1,6 +1,5 @@
 package anindya.sample.smackchat.adapter;
 
-
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -17,7 +16,11 @@ import anindya.sample.smackchat.R;
 import anindya.sample.smackchat.model.ChatItem;
 import base.droidtool.DroidTool;
 
-public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHolder> {
+/**
+ * Created by Duti on 9/14/2018.
+ */
+
+public class GroupChatListAdapter extends RecyclerView.Adapter<GroupChatListAdapter.ViewHolder> {
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
@@ -51,7 +54,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHo
         return mContext;
     }
 
-    public ChatListAdapter(DroidTool droidTool, Context context, ArrayList<ChatItem> _data) {
+    public GroupChatListAdapter(DroidTool droidTool, Context context, ArrayList<ChatItem> _data) {
         this._data = _data;
         mContext = context;
         dt = droidTool;
@@ -144,5 +147,4 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHo
             return "";
         }
     }
-
 }

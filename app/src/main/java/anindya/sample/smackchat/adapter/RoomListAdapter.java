@@ -15,6 +15,7 @@ import android.widget.TextView;
 import java.util.List;
 
 import anindya.sample.smackchat.R;
+import anindya.sample.smackchat.activities.GroupChatActivity;
 import anindya.sample.smackchat.model.RoomItem;
 import base.droidtool.DroidTool;
 
@@ -102,7 +103,7 @@ public class RoomListAdapter extends RecyclerView.Adapter<RoomListAdapter.ViewHo
         item_card_view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //dt.tools.startActivity(ContactProfileActivity.class, data.getUsername());
+                dt.tools.startActivity(GroupChatActivity.class, data.getName());
             }
         });
 
@@ -116,10 +117,19 @@ public class RoomListAdapter extends RecyclerView.Adapter<RoomListAdapter.ViewHo
 
     public String getAllParticipant(List<String> arrayList) {
         String val = "";
-        for (int i = 0; i < arrayList.size(); i++) {
-            val = val + arrayList.get(i) + ", ";
+        if(arrayList!=null){
+            if(arrayList.size()>0){
+                for (int i = 0; i < arrayList.size(); i++) {
+                    val = val + arrayList.get(i) + ", ";
+                }
+                val.substring(0, val.length() - 1);
+            } else{
+                val = "no member";
+            }
         }
-        if (val.isEmpty()) return val;
-        else return val.substring(0, val.length() - 1);
+        else {
+            val = "no member";
+        }
+        return val;
     }
 }

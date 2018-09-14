@@ -194,6 +194,43 @@ public class XmppService extends Service {
         return xmppManager.getRoomInfo(roomName);
     }
 
+    public interface onRoomCreateResponse {
+        void onCreated(boolean isCreated);
+    }
+
+    public void createRoom(RoomItem roomItem, boolean isPublic, onRoomCreateResponse listener){
+        final onRoomCreateResponse roomCreateResponse = listener;
+        xmppManager.setRoomCreateResponseListener(new XmppManager.onRoomCreateResponse() {
+            @Override
+            public void onCreated(boolean isCreated) {
+                if(roomCreateResponse!=null)roomCreateResponse.onCreated(isCreated);
+            }
+        });
+        xmppManager.createRoom(roomItem, isPublic);
+    }
+
+    public interface onRoomJoinResponse {
+        void onJoin(boolean isJoined);
+    }
+    public void joinRoom(String userName, String roomName, onRoomJoinResponse listener){
+        final onRoomJoinResponse roomJoinResponse = listener;
+        xmppManager.setRoomJoinResponseListener(new XmppManager.onRoomJoinResponse() {
+            @Override
+            public void onJoin(boolean isJoined) {
+                if(roomJoinResponse!=null)roomJoinResponse.onJoin(isJoined);
+            }
+        });
+        xmppManager.joinChatRoom(userName, roomName);
+    }
+
+    public void receiveGroupMessage(){
+        xmppManager.receiveGroupMessages();
+    }
+
+    public void sendGroupMessage(Message.Type type, String subject, String chat){
+        xmppManager.sendGroupChat(type, subject, chat);
+    }
+
     @Override
     public void onDestroy() {
         Log.d("xmpp: ", "connection service destroyed");

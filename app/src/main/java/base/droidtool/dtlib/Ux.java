@@ -572,6 +572,17 @@ public class Ux {
             return mView;
         }
 
+        public View showModalDialog(int bottomSheetLayout) {
+            mView = View.inflate(dt.c, bottomSheetLayout, null);
+            mBottomSheetDialog = new Dialog(dt.c, R.style.MaterialDialogSheet);
+            mBottomSheetDialog.setContentView(mView);
+            mBottomSheetDialog.setCancelable(true);
+            mBottomSheetDialog.getWindow().setLayout(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            mBottomSheetDialog.getWindow().setGravity(Gravity.BOTTOM);
+            mBottomSheetDialog.show();
+            return mView;
+        }
+
     }
 
     public class checkbox {

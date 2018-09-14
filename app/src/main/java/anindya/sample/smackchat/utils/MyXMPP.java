@@ -49,6 +49,7 @@ import org.jivesoftware.smackx.search.UserSearch;
 import org.jivesoftware.smackx.search.UserSearchManager;
 import org.jivesoftware.smackx.vcardtemp.packet.VCard;
 import org.jivesoftware.smackx.xdata.Form;
+import org.jivesoftware.smackx.xdata.FormField;
 import org.jivesoftware.smackx.xdata.packet.DataForm;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.DomainBareJid;
@@ -57,6 +58,7 @@ import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Localpart;
 import org.jxmpp.jid.parts.Resourcepart;
+import org.jxmpp.jid.util.JidUtil;
 import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.io.IOException;
@@ -67,6 +69,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
@@ -1167,6 +1170,12 @@ public class MyXMPP {
             answerForm.setAnswer("muc#roomconfig_publicroom", true);
             answerForm.setAnswer("muc#roomconfig_persistentroom", true);
             answerForm.setAnswer("muc#roomconfig_roomdesc", roomDescription);
+
+            FormField roomAdmins = new FormField();
+            roomAdmins.setLabel("muc#roomconfig_roomadmins");
+            roomAdmins.addValue(userName + "@" + CHAT_SERVER_SERVICE_NAME);
+            answerForm.addField(roomAdmins);
+
             // Send room configuration form which indicates that we want
             try {
                 multiUserChat.sendConfigurationForm(answerForm);

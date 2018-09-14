@@ -78,7 +78,7 @@ public class UserFragment extends Fragment {
 
     private void startLoadUsers() {
         if(activity.dt.droidNet.hasConnection()){
-            activity.showDialog();
+            //activity.showDialog();
             isLoading = true;
             apiCalls.setLoadUserListener(new ApiCalls.onLoadUserListener() {
                 @Override
@@ -89,7 +89,7 @@ public class UserFragment extends Fragment {
                         adapter = new UserListAdapter(activity.dt, getActivity(), userListArrayList);
                         mRecyclerView.setAdapter(adapter);
                     }
-                    activity.hideDialog();
+                    //activity.hideDialog();
                     isLoading = false;
                     refreshLayout.setRefreshing(false);
                 }

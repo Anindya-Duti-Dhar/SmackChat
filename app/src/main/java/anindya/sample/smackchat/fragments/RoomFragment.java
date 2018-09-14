@@ -1,14 +1,18 @@
 package anindya.sample.smackchat.fragments;
 
 
+import android.graphics.Color;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import org.jivesoftware.smackx.muc.HostedRoom;
 
@@ -30,6 +34,7 @@ public class RoomFragment extends Fragment {
     private RoomListAdapter adapter;
     private SwipeRefreshLayout refreshLayout;
     private boolean isLoading = false;
+    private TextView mNoDataMessage;
 
     // create instance
     public static RoomFragment newInstance() {
@@ -65,13 +70,10 @@ public class RoomFragment extends Fragment {
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser) {
             if (!hasFragmentLoadedOnce) {
-                // show no feeds if list is empty
-                if (roomItemList.size() == 0) {
-                    //showAllLoadingAnimation(false);
+                if(activity.isLogged){
+                    getRoomList();
+                    hasFragmentLoadedOnce = true;
                 }
-                // call server to fetch feeds
-                //getFeeds(false);
-                hasFragmentLoadedOnce = true;
             }
         }
     }
@@ -80,23 +82,43 @@ public class RoomFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         activity = (HomeActivity) getActivity();
-        activity.setLoginResponse(new HomeActivity.onLoginListener() {
+        initUi(view);
+        activity.setRoomRefreshResponseListener(new HomeActivity.onRoomRefreshResponse() {
             @Override
-            public void onLogged(boolean isSuccess) {
-                if(isSuccess){
-                    getRoomList();
-                }
+            public void onRefresh() {
+                if(!isLoading)getRoomList();
+            }
+        });
+    }
+
+    private void initUi(View view) {
+        mNoDataMessage = (TextView)view.findViewById(R.id.mNoDataMessage);
+        mRecyclerView = (RecyclerView) view.findViewById(R.id.mRecylerView);
+        mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
+        adapter = new RoomListAdapter(activity.dt, getActivity(), roomItemList);
+        mRecyclerView.setAdapter(adapter);
+
+        refreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_layout);
+        refreshLayout.setColorSchemeColors(Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW);
+        refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                if(!isLoading)getRoomList();
             }
         });
     }
 
     private void getRoomList(){
+        isLoading = true;
+        //activity.showDialog();
         activity.mService.getRoomList(new XmppService.onRoomLoadResponse() {
             @Override
             public void onLoad(List<HostedRoom> hostedRoomList) {
                 if(hostedRoomList!=null){
+                    roomItemList.clear();
                     if(hostedRoomList.size()>0){
-                        roomItemList.clear();
+                        mNoDataMessage.setVisibility(View.GONE);
+                        mRecyclerView.setVisibility(View.VISIBLE);
                         for (HostedRoom roomList: hostedRoomList) {
                             RoomItem roomItem = new RoomItem();
                             roomItem = activity.mService.getRoomInfo(roomList.getName());
@@ -106,10 +128,17 @@ public class RoomFragment extends Fragment {
                                 roomItemList.add(roomItem);
                             }
                         }
+                        adapter.notifyDataSetChanged();
                         for (RoomItem item: roomItemList) {
                             Log.d("xmpp: ", "Room List: "+item.getOccupantsCount());
                         }
+                    } else {
+                        mNoDataMessage.setVisibility(View.VISIBLE);
+                        mRecyclerView.setVisibility(View.GONE);
                     }
+                    isLoading = false;
+                    if(refreshLayout.isRefreshing())refreshLayout.setRefreshing(false);
+                   //activity.hideDialog();
                 }
             }
         });

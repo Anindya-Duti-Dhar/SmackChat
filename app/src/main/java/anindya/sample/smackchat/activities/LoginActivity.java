@@ -68,7 +68,7 @@ public class LoginActivity extends BaseActivity {
             dt.pref.set("login", true);
             dt.pref.set("username", userName.toLowerCase());
             dt.pref.set("password", password);
-            hideDialog();
+            //hideDialog();
             dt.tools.startActivity(HomeActivity.class, "");
         }
     }
@@ -97,11 +97,11 @@ public class LoginActivity extends BaseActivity {
         btGo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showDialog();
+                //showDialog();
                 if (dt.droidNet.hasConnection()) {
                     login();
                 } else {
-                    hideDialog();
+                    //hideDialog();
                     dt.droidNet.internetErrorDialog();
                 }
             }
@@ -128,7 +128,7 @@ public class LoginActivity extends BaseActivity {
     }
 
     public void onLoginFailed() {
-        hideDialog();
+        //hideDialog();
         toast(getString(R.string.login_failed_message));
         runOnUiThread(new Runnable() {
             @Override
@@ -183,7 +183,7 @@ public class LoginActivity extends BaseActivity {
         Log.d("xmpp: ", "Login count: " + Count);
         if (Count % 4 == 0) {
             Log.d("xmpp: ", "Login time out");
-            hideDialog();
+            //hideDialog();
             // after 3rd attempt
             onLoginFailed();
         } else {
