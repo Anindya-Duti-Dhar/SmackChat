@@ -30,10 +30,13 @@ import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 import org.jivesoftware.smackx.mam.MamManager;
 import org.jivesoftware.smackx.muc.HostedRoom;
+import org.jivesoftware.smackx.muc.InvitationListener;
+import org.jivesoftware.smackx.muc.InvitationRejectionListener;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatException;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.muc.RoomInfo;
+import org.jivesoftware.smackx.muc.packet.MUCUser;
 import org.jivesoftware.smackx.ping.PingFailedListener;
 import org.jivesoftware.smackx.ping.PingManager;
 import org.jivesoftware.smackx.receipts.DeliveryReceiptManager;
@@ -43,6 +46,8 @@ import org.jivesoftware.smackx.xdata.Form;
 import org.jxmpp.jid.DomainBareJid;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.EntityFullJid;
+import org.jxmpp.jid.EntityJid;
+import org.jxmpp.jid.FullJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Localpart;
@@ -68,6 +73,7 @@ import base.droidtool.DroidTool;
 import static anindya.sample.smackchat.utils.Const.CHAT_ROOM_SERVICE_NAME;
 import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_ADDRESS;
 import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_PORT;
+import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_RESOURCE_NAME;
 import static anindya.sample.smackchat.utils.Const.CHAT_SERVER_SERVICE_NAME;
 
 
@@ -83,36 +89,6 @@ public class XmppManager {
     StanzaFilter mChatFilter, mChatFilter2;
     MultiUserChatManager manager;
     MultiUserChat multiUserChat;
-
-    public onRegistrationResponse registrationResponse = null;
-
-    public interface onRegistrationResponse {
-        void onRegistered(boolean isRegistered);
-    }
-
-    public void setRegistrationResponseListener(onRegistrationResponse listener) {
-        registrationResponse = listener;
-    }
-
-    public onLoginResponse loginResponse = null;
-
-    public interface onLoginResponse {
-        void onLoggedIn(boolean isLogged);
-    }
-
-    public void setLoginResponseListener(onLoginResponse listener) {
-        loginResponse = listener;
-    }
-
-    public onFriendLoadResponse friendLoadResponse = null;
-
-    public interface onFriendLoadResponse {
-        void onLoaded(List<MyFriend> friendList);
-    }
-
-    public void setFriendLoadResponseListener(onFriendLoadResponse listener) {
-        friendLoadResponse = listener;
-    }
 
     public onConnectionResponse connectionResponse = null;
 
@@ -169,6 +145,15 @@ public class XmppManager {
         configBuilder.setHostnameVerifier(verifier);
         configBuilder.setPort(CHAT_SERVER_PORT);
 
+/*        Resourcepart resourcepart = null;
+        try {
+            resourcepart = Resourcepart.from(CHAT_SERVER_RESOURCE_NAME);
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Resourcepart error: " + e.getMessage());
+        }
+        configBuilder.setResource(resourcepart);*/
+
         InetAddress address = null;
         if (!CHAT_SERVER_ADDRESS.matches((".*[a-zA-Z]+.*"))) {
             try {
@@ -220,6 +205,7 @@ public class XmppManager {
         connectionThread.execute();
     }
 
+    // Check Authentication function
     public boolean isAuthenticated() {
         if (connection.isAuthenticated()) return true;
         else return false;
@@ -237,7 +223,17 @@ public class XmppManager {
         }).start();
     }
 
-    // registration
+    // registration Function
+    public onRegistrationResponse registrationResponse = null;
+
+    public interface onRegistrationResponse {
+        void onRegistered(boolean isRegistered);
+    }
+
+    public void setRegistrationResponseListener(onRegistrationResponse listener) {
+        registrationResponse = listener;
+    }
+
     public void registration(String userName, String passWord) {
         try {
             Localpart lp = Localpart.from(userName);
@@ -303,6 +299,16 @@ public class XmppManager {
     }
 
     // Login function
+    public onLoginResponse loginResponse = null;
+
+    public interface onLoginResponse {
+        void onLoggedIn(boolean isLogged);
+    }
+
+    public void setLoginResponseListener(onLoginResponse listener) {
+        loginResponse = listener;
+    }
+
     public void login(final String userName, final String passWord) {
         try {
             connection.login(userName, passWord);
@@ -322,6 +328,16 @@ public class XmppManager {
     }
 
     // Get Friend List function
+    public onFriendLoadResponse friendLoadResponse = null;
+
+    public interface onFriendLoadResponse {
+        void onLoaded(List<MyFriend> friendList);
+    }
+
+    public void setFriendLoadResponseListener(onFriendLoadResponse listener) {
+        friendLoadResponse = listener;
+    }
+
     public void getFriendList() {
         Roster roster = Roster.getInstanceFor(connection);
         if (roster != null && !roster.isLoaded()) {
@@ -697,16 +713,22 @@ public class XmppManager {
             }
 
             Form answerForm = form.createAnswerForm();
-            if(isPublic){
+            if (isPublic) {
                 answerForm.getField("muc#roomconfig_publicroom").addValue("1");
-                answerForm.getField("muc#roomconfig_enablelogging").addValue("1");
-            }
-            else {
+            } else {
                 answerForm.getField("muc#roomconfig_publicroom").addValue("0");
-                answerForm.getField("muc#roomconfig_enablelogging").addValue("0");
             }
-            answerForm.getField("muc#roomconfig_persistentroom").addValue("1");
             answerForm.setAnswer("muc#roomconfig_roomdesc", roomItem.getDescription());
+            answerForm.getField("muc#roomconfig_enablelogging").addValue("1");
+            answerForm.getField("muc#roomconfig_persistentroom").addValue("1");
+
+            answerForm.getField("muc#roomconfig_membersonly").addValue("0");
+            answerForm.getField("muc#roomconfig_allowinvites").addValue("1");
+            answerForm.getField("muc#roomconfig_whois").addValue("anyone");
+            answerForm.getField("x-muc#roomconfig_reservednick").addValue("1");
+            answerForm.getField("x-muc#roomconfig_canchangenick").addValue("1");
+            answerForm.getField("x-muc#roomconfig_registration").addValue("0");
+
             answerForm.getField("muc#roomconfig_roomowners").addValue(roomItem.getNick() + "@" + CHAT_SERVER_SERVICE_NAME);
             answerForm.getField("muc#roomconfig_roomadmins").addValue(roomItem.getNick() + "@" + CHAT_SERVER_SERVICE_NAME);
 
@@ -754,6 +776,16 @@ public class XmppManager {
         }
     }
 
+    public onRoomJoinResponse roomJoinResponse = null;
+
+    public interface onRoomJoinResponse {
+        void onJoin(boolean isJoined);
+    }
+
+    public void setRoomJoinResponseListener(onRoomJoinResponse listener) {
+        roomJoinResponse = listener;
+    }
+
     public void joinChatRoom(String userName, String roomName) {
         manager = MultiUserChatManager.getInstanceFor(connection);
 
@@ -778,64 +810,156 @@ public class XmppManager {
             multiUserChat.join(nickname);
         } catch (SmackException.NoResponseException e) {
             e.printStackTrace();
-            Log.d("xmpp: ", "Chat room join Error: " + e.getMessage());
+            Log.d("xmpp: ", "Chat room join Error: NoResponseException: " + e.getMessage());
         } catch (XMPPException.XMPPErrorException e) {
             e.printStackTrace();
-            Log.d("xmpp: ", "Chat room join Error: " + e.getMessage());
+            Log.d("xmpp: ", "Chat room join Error: XMPPErrorException: " + e.getMessage());
         } catch (SmackException.NotConnectedException e) {
             e.printStackTrace();
-            Log.d("xmpp: ", "Chat room join Error: " + e.getMessage());
+            Log.d("xmpp: ", "Chat room join Error: NotConnectedException: " + e.getMessage());
+            if (roomJoinResponse != null) roomJoinResponse.onJoin(false);
         } catch (InterruptedException e) {
             e.printStackTrace();
-            Log.d("xmpp: ", "Chat room join Error: " + e.getMessage());
+            Log.d("xmpp: ", "Chat room join Error: InterruptedException: " + e.getMessage());
+            if (roomJoinResponse != null) roomJoinResponse.onJoin(false);
         } catch (MultiUserChatException.NotAMucServiceException e) {
             e.printStackTrace();
-            Log.d("xmpp: ", "Chat room join Error: " + e.getMessage());
+            Log.d("xmpp: ", "Chat room join Error: NotAMucServiceException: " + e.getMessage());
+            if (roomJoinResponse != null) roomJoinResponse.onJoin(false);
         }
 
         // if user joined successfully
         if (multiUserChat.isJoined()) {
             Log.d("xmpp: ", "Chat room join success");
-            if(roomJoinResponse!=null)roomJoinResponse.onJoin(true);
+            if (roomJoinResponse != null) roomJoinResponse.onJoin(true);
         } else {
             Log.d("xmpp: ", "Chat room join failed");
-            if(roomJoinResponse!=null)roomJoinResponse.onJoin(false);
+            if (roomJoinResponse != null) roomJoinResponse.onJoin(false);
         }
     }
 
-    public onRoomJoinResponse roomJoinResponse = null;
+    public onSendInvitationResponse sendInvitationResponse = null;
 
-    public interface onRoomJoinResponse {
-        void onJoin(boolean isJoined);
+    public interface onSendInvitationResponse {
+        void onSend(boolean isSent);
     }
 
-    public void setRoomJoinResponseListener(onRoomJoinResponse listener) {
-        roomJoinResponse = listener;
+    public void setSendInvitationResponseListener(onSendInvitationResponse listener) {
+        sendInvitationResponse = listener;
+    }
+
+    public void sendInvitation(String friendName) {
+        EntityBareJid friendJid = null;
+        try {
+            friendJid = (EntityBareJid) JidCreate.bareFrom(friendName + "@" + CHAT_SERVER_SERVICE_NAME);
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Room Invitation error: " + e.getMessage());
+            if (sendInvitationResponse != null) sendInvitationResponse.onSend(false);
+        }
+        try {
+            multiUserChat.invite(friendJid, "Meet me in this excellent room");
+            if (sendInvitationResponse != null) sendInvitationResponse.onSend(true);
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Room Invitation error: " + e.getMessage());
+            if (sendInvitationResponse != null) sendInvitationResponse.onSend(false);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Room Invitation error: " + e.getMessage());
+            if (sendInvitationResponse != null) sendInvitationResponse.onSend(false);
+        }
+    }
+
+    public onRoomInviteResponse roomInviteResponse = null;
+
+    public interface onRoomInviteResponse {
+        void onInvite(XMPPConnection connection, MultiUserChat room, EntityJid invitedBy);
+    }
+
+    public void setRoomInviteResponseResponseListener(onRoomInviteResponse listener) {
+        roomInviteResponse = listener;
+    }
+
+    public void setRoomInvitationListener(final String userName) {
+        MultiUserChatManager.getInstanceFor(connection).addInvitationListener(new InvitationListener() {
+            @Override
+            public void invitationReceived(XMPPConnection conn, MultiUserChat room, EntityJid inviter, String reason, String password, Message message, MUCUser.Invite invitation) {
+                if (roomInviteResponse != null) roomInviteResponse.onInvite(conn, room, inviter);
+                joinRoomByInvitation(userName, room);
+            }
+        });
+    }
+
+    public onJoinInvitedRoom joinInvitedRoom = null;
+
+    public interface onJoinInvitedRoom {
+        void onJoinInvited(boolean isJoined);
+    }
+
+    public void setRoomJoinInviteResponseListener(onJoinInvitedRoom listener) {
+        joinInvitedRoom = listener;
+    }
+
+    public void joinRoomByInvitation(String userName, MultiUserChat room) {
+        Resourcepart nickname = null;
+        try {
+            nickname = Resourcepart.from(userName);
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Resourcepart error: " + e.getMessage());
+        }
+        try {
+            room.join(nickname);
+        } catch (SmackException.NoResponseException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Chat room join By Invitation Error: NoResponseException: " + e.getMessage());
+        } catch (XMPPException.XMPPErrorException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Chat room join By Invitation Error: XMPPErrorException: " + e.getMessage());
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Chat room join By Invitation Error: NotConnectedException: " + e.getMessage());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Chat room join By Invitation Error: InterruptedException: " + e.getMessage());
+        } catch (MultiUserChatException.NotAMucServiceException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Chat room join By Invitation Error: NotAMucServiceException: " + e.getMessage());
+        }
+
+        if (room.isJoined()) {
+            if (joinInvitedRoom != null) joinInvitedRoom.onJoinInvited(true);
+            dt.msg("Joined into " + room.getNickname());
+        } else {
+            if (joinInvitedRoom != null) joinInvitedRoom.onJoinInvited(false);
+            dt.msg("joined Failed into " + room.getNickname());
+        }
     }
 
     public void receiveGroupMessages() {
-            mChatFilter2 = MessageTypeFilter.GROUPCHAT;
-            mChatStanzaListener2 = new StanzaListener() {
-                @Override
-                public void processStanza(Stanza packet) throws SmackException.NotConnectedException, InterruptedException, SmackException.NotLoggedInException {
-                    Message message = (Message) packet;
-                    if (message.getBody() != null) {
-                        String sender = String.valueOf(message.getFrom());
-                        String from = sender.substring(sender.indexOf("/")+1, sender.length());
-                        //Get the extension from message
-                        StandardExtensionElement messageTimeStamp = (StandardExtensionElement) message
-                                .getExtension("urn:xmpp:timestamp");
-                        String timestamp = "";
-                        //Get the value from extension
-                        if(messageTimeStamp!=null) {
-                            long timestampOriginal = Long.parseLong(messageTimeStamp.getAttributeValue("timestamp"));
-                            timestamp = convertDate(timestampOriginal, "dd-MMM-yyyy h:mm a");
-                        }
-                        EventBus.getDefault().postSticky(new BroadcastEvent("groupchat", new ChatItem(message.getType(), message.getSubject(), message.getBody(), message.getStanzaId(), timestamp, from, false)));
+        mChatFilter2 = MessageTypeFilter.GROUPCHAT;
+        mChatStanzaListener2 = new StanzaListener() {
+            @Override
+            public void processStanza(Stanza packet) throws SmackException.NotConnectedException, InterruptedException, SmackException.NotLoggedInException {
+                Message message = (Message) packet;
+                if (message.getBody() != null) {
+                    String sender = String.valueOf(message.getFrom());
+                    String from = sender.substring(sender.indexOf("/") + 1, sender.length());
+                    //Get the extension from message
+                    StandardExtensionElement messageTimeStamp = (StandardExtensionElement) message
+                            .getExtension("urn:xmpp:timestamp");
+                    String timestamp = "";
+                    //Get the value from extension
+                    if (messageTimeStamp != null) {
+                        long timestampOriginal = Long.parseLong(messageTimeStamp.getAttributeValue("timestamp"));
+                        timestamp = convertDate(timestampOriginal, "dd-MMM-yyyy h:mm a");
                     }
+                    EventBus.getDefault().postSticky(new BroadcastEvent("groupchat", new ChatItem(message.getType(), message.getSubject(), message.getBody(), message.getStanzaId(), timestamp, from, false)));
                 }
-            };
-            connection.addSyncStanzaListener(mChatStanzaListener2, mChatFilter2);
+            }
+        };
+        connection.addSyncStanzaListener(mChatStanzaListener2, mChatFilter2);
     }
 
     public void sendGroupChat(Message.Type type, String subject, String chat) {

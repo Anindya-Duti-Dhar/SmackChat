@@ -13,6 +13,8 @@ import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.muc.HostedRoom;
+import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jxmpp.jid.EntityJid;
 
 import java.util.List;
 
@@ -223,6 +225,36 @@ public class XmppService extends Service {
         xmppManager.joinChatRoom(userName, roomName);
     }
 
+    public interface onRoomInviteResponse {
+        void onInvite(XMPPConnection connection, MultiUserChat room, EntityJid invitedBy);
+    }
+
+    public void setRoomInviteListener(String userName, onRoomInviteResponse listener){
+        final onRoomInviteResponse roomInviteResponse = listener;
+        xmppManager.setRoomInviteResponseResponseListener(new XmppManager.onRoomInviteResponse() {
+            @Override
+            public void onInvite(XMPPConnection connection, MultiUserChat room, EntityJid invitedBy) {
+                if(roomInviteResponse!=null)roomInviteResponse.onInvite(connection, room, invitedBy);
+            }
+        });
+        xmppManager.setRoomInvitationListener(userName);
+    }
+
+    public interface onSendInvitationResponse {
+        void onSend(boolean isSent);
+    }
+
+    public void sendInvitation(String friendName, onSendInvitationResponse listener) {
+        final onSendInvitationResponse sendInvitationResponse = listener;
+        xmppManager.setSendInvitationResponseListener(new XmppManager.onSendInvitationResponse() {
+            @Override
+            public void onSend(boolean isSent) {
+                if(sendInvitationResponse!=null)sendInvitationResponse.onSend(isSent);
+            }
+        });
+        xmppManager.sendInvitation(friendName);
+    }
+
     public void receiveGroupMessage(){
         xmppManager.receiveGroupMessages();
     }
@@ -234,7 +266,7 @@ public class XmppService extends Service {
     @Override
     public void onDestroy() {
         Log.d("xmpp: ", "connection service destroyed");
-        //xmppManager.disconnectConnection();
+        xmppManager.disconnectConnection();
         super.onDestroy();
         // re launch service
         //reLaunchService();

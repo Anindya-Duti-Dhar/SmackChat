@@ -10,7 +10,7 @@ public class Const {
 	public static final int CHAT_SERVER_PORT = 5222;
 	public static final String REST_API_ADDRESS = "http://"+CHAT_SERVER_ADDRESS+":9090/plugins/restapi/v1/";
 	public static final String CHAT_SERVER_RESOURCE_NAME = "Android";
-	public static final String CHAT_ROOM_SERVICE_NAME = "scibd.";// "conference.";
+	public static final String CHAT_ROOM_SERVICE_NAME = "conference.";
 	public static final String ALTERNATE_CHAT_ROOM_REFERENCE = "demo";
 
 	// id to handle the notification in the notification tray

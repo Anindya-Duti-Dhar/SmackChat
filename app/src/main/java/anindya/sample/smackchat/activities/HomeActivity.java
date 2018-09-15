@@ -17,6 +17,8 @@ import android.widget.Button;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jxmpp.jid.EntityJid;
 
 import anindya.sample.smackchat.R;
 import anindya.sample.smackchat.fragments.FriendsFragment;

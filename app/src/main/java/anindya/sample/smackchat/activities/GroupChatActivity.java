@@ -119,7 +119,6 @@ public class GroupChatActivity extends BaseActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d("xmpp: ", "onCreate");
         setContentView(R.layout.activity_group_chat);
         super.register(this, "");
         super.setStatusBarColor(getResources().getColor(R.color.contact_profile_darkBlue));
@@ -191,8 +190,9 @@ public class GroupChatActivity extends BaseActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
             case R.id.action_profile:
-
                 break;
             default:
                 break;
