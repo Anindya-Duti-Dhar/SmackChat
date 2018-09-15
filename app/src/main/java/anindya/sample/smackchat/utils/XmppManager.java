@@ -725,8 +725,8 @@ public class XmppManager {
             answerForm.getField("muc#roomconfig_membersonly").addValue("0");
             answerForm.getField("muc#roomconfig_allowinvites").addValue("1");
             answerForm.getField("muc#roomconfig_whois").addValue("anyone");
-            answerForm.getField("x-muc#roomconfig_reservednick").addValue("1");
-            answerForm.getField("x-muc#roomconfig_canchangenick").addValue("1");
+            answerForm.getField("x-muc#roomconfig_reservednick").addValue("0");
+            answerForm.getField("x-muc#roomconfig_canchangenick").addValue("0");
             answerForm.getField("x-muc#roomconfig_registration").addValue("0");
 
             answerForm.getField("muc#roomconfig_roomowners").addValue(roomItem.getNick() + "@" + CHAT_SERVER_SERVICE_NAME);
@@ -807,10 +807,10 @@ public class XmppManager {
 
         multiUserChat = manager.getMultiUserChat(mucJid);
         try {
-            multiUserChat.join(nickname);
-        } catch (SmackException.NoResponseException e) {
-            e.printStackTrace();
-            Log.d("xmpp: ", "Chat room join Error: NoResponseException: " + e.getMessage());
+            if(!multiUserChat.isJoined())multiUserChat.join(nickname);
+            else {
+                if (roomJoinResponse != null) roomJoinResponse.onJoin(true);
+            }
         } catch (XMPPException.XMPPErrorException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Chat room join Error: XMPPErrorException: " + e.getMessage());
@@ -825,6 +825,10 @@ public class XmppManager {
         } catch (MultiUserChatException.NotAMucServiceException e) {
             e.printStackTrace();
             Log.d("xmpp: ", "Chat room join Error: NotAMucServiceException: " + e.getMessage());
+            if (roomJoinResponse != null) roomJoinResponse.onJoin(false);
+        } catch (SmackException.NoResponseException e) {
+            e.printStackTrace();
+            Log.d("xmpp: ", "Chat room join Error: NoResponseException: " + e.getMessage());
             if (roomJoinResponse != null) roomJoinResponse.onJoin(false);
         }
 
